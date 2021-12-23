@@ -131,8 +131,15 @@ end
 
 struct ASTCmpdStmt
     # TODO for now only compound statements
-    items :: Vector{Union{ASTDecl, ASTCmpdStmt}}
+    items :: Vector{Any} # Union{ASTDecl, ASTStmt} (mutually recursive...)
 end
+
+struct ASTReturnStmt
+    expr :: TokenNum # TODO for now
+end
+
+const ASTJumpStmt = Union{ASTReturnStmt}
+const ASTStmt = Union{ASTCmpdStmt, ASTJumpStmt}
 
 struct ASTFunDef
     # TODO add the rest 6.9.1
@@ -159,12 +166,20 @@ function parseDecltor(r)
     ASTDecltor(id, params)
 end
 
+function parseReturnStmt(r)
+    consume(r, TokenKw("return"))
+    n = consumeType(r, TokenNum)
+    ASTReturnStmt(n)
+end
+
 function parseCmpdStmt(r)
     consume(r, TokenPunct("{"))
-    while peek(r) != TokenPunct("}") next(r) end # TODO change
+
+    s = parseReturnStmt(r)
+    # TODO change
     consume(r, TokenPunct("}"))
     
-    ASTCmpdStmt([])
+    ASTCmpdStmt([s])
 end
 
 function parseFunDef(r)
