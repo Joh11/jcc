@@ -1,1 +1,9 @@
 #+title: JCC: A C compiler written in Julia
+
+* Links
+- [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf][latest revision of the C99 standard]]
+- [[http://scheme2006.cs.uchicago.edu/11-ghuloum.pdf][An Incremental Approach to Compiler Construction (A. Ghuloum)]]
+
+* Plan
+Follow Ghuloum's paper closely, by making a working interpreter for
+[[file:test.c]].
