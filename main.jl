@@ -1,3 +1,5 @@
+import Base.peek
+
 # open file
 
 function readfile(path="test.c")
@@ -5,6 +7,8 @@ function readfile(path="test.c")
         join(readlines(f), "\n")
     end
 end
+
+# Tokenizer stuff
 
 struct TokenNum
     n :: Int
@@ -68,4 +72,104 @@ end
 function iskeyword(str)
     # TODO put all A.1.2
     str in ["return"]
+end
+
+# Parser stuff
+
+mutable struct Reader
+    pos :: Int
+    tokens :: Vector{Token}
+end
+
+function makereader(tokens)
+    @assert length(tokens) > 0
+    Reader(1, tokens)
+end
+
+function peek(r :: Reader)
+    r.tokens[r.pos]
+end
+
+function next(r :: Reader)
+    r.pos += 1
+    r.tokens[r.pos - 1]
+end
+
+function consumeType(r::Reader, type)
+    tok = peek(r)
+    if !(typeof(tok) <: type)
+        error("wrong type for token: expeced $type, got $(tok)")
+    else
+        next(r)
+    end
+end
+
+function consume(r::Reader, val)
+    tok = peek(r)
+    if typeof(tok) == val
+        error("unexpected token: expeced $val, got $tok")
+    else
+        next(r)
+    end
+end
+
+struct ASTParamDecl
+    type :: TokenId
+    id :: TokenId
+end
+
+struct ASTDecl
+    specs :: Vector{TokenKw}
+    id :: TokenId # TODO false
+end
+
+struct ASTDecltor
+    # TODO add the rest 6.7.5
+    id :: TokenId
+    params :: Vector{ASTParamDecl}
+end
+
+struct ASTCmpdStmt
+    # TODO for now only compound statements
+    items :: Vector{Union{ASTDecl, ASTCmpdStmt}}
+end
+
+struct ASTFunDef
+    # TODO add the rest 6.9.1
+    type :: TokenId
+    decltor :: ASTDecltor
+    stmt :: ASTCmpdStmt
+end
+
+# See A.2.4 for this
+struct ASTTU # translation unit
+    # TODO add decl
+    decls :: Vector{ASTFunDef}
+end
+
+
+# parse stuff
+function parseDecltor(r)
+    id = consumeType(r, TokenId)
+    params = ASTParamDecl[]
+    if(peek(r) == TokenPunct("("))
+        next(r) # consume it
+        consume(r, TokenPunct(")")) # consume )
+    end
+    ASTDecltor(id, params)
+end
+
+function parseCmpdStmt(r)
+    consume(r, TokenPunct("{"))
+    while peek(r) != TokenPunct("}") next(r) end # TODO change
+    consume(r, TokenPunct("}"))
+    
+    ASTCmpdStmt([])
+end
+
+function parseFunDef(r)
+    type = consumeType(r, TokenId)
+    decltor = parseDecltor(r)
+    stmt = parseCmpdStmt(r)
+    ASTFunDef(type, decltor, stmt)
 end
