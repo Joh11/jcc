@@ -6,12 +6,23 @@ function readfile(path="test.c")
     end
 end
 
-@enum TokenType tokenNum tokenId tokenPunct tokenKw
+struct TokenNum
+    n :: Int
+end
 
-struct Token
-    type :: TokenType
+struct TokenId
     str :: String
 end
+
+struct TokenPunct
+    str :: String
+end
+
+struct TokenKw
+    str :: String
+end
+
+const Token = Union{TokenNum, TokenId, TokenPunct, TokenKw}
 
 function tokenize(text)
     tokens = Token[]
@@ -27,10 +38,10 @@ function tokenize(text)
                 token *= text[i]
                 i += 1
             end
-            push!(tokens, Token(tokenNum, token))
+            push!(tokens, TokenNum(parse(Int, token)))
             # TODO put other punctuators
         elseif text[i] in "[](){}.;" # see punctuators A.1.7 
-            push!(tokens, Token(tokenPunct, string(text[i])))
+            push!(tokens, TokenPunct(string(text[i])))
             i += 1
         elseif isnondigit(text[i])
             token = string(text[i])
@@ -41,8 +52,7 @@ function tokenize(text)
             end
 
             # discriminate between identifiers and keywords
-            type = iskeyword(token) ? tokenKw : tokenId
-            push!(tokens, Token(type, token))
+            push!(tokens, iskeyword(token) ? TokenKw(token) : TokenId(token))
         else
             error("unhandled character $(text[i])")
         end
