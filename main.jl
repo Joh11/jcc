@@ -1,4 +1,12 @@
+module JCC
+
 import Base.peek
+
+export tokenize
+export TokenId, TokenPunct, TokenKw, TokenNum
+export makereader
+export parseFunDef
+export compile
 
 # open file
 function readfile(path="test.c")
@@ -190,30 +198,34 @@ end
 
 
 # emit assembly
-function compileFunDef(def::ASTFunDef, io=stdout)
-    println(io, "$(def.decltor.id):")
-    # TODO continue from here
-end
 
-# unit tests
-using Test
+# all functions for code generation will have the form `compile(t)`,
+# and use a global state to control the output stream
 
-begin
-    text = "int main()\n{\n    return 42;\n}"
-    toks = tokenize(text)
+global io = stdout
 
-    @testset "tokenizer" begin
-        @test toks == [
-            TokenId("int"), TokenId("main"), TokenPunct("("), TokenPunct(")"),
-            TokenPunct("{"),
-            TokenKw("return"), TokenNum(42), TokenPunct(";"),
-            TokenPunct("}")
-        ]
+function compile(def::ASTFunDef)
+    println(io, "# function $(def.decltor.id.str)")
+    println(io, "push %rbp")
+    println(io, "movq %rsp, %rbp")
+    
+    # TODO compile body
+    # Union{ASTDecl, ASTStmt}
+    for stmt in def.stmt.items
+        compile(stmt)
     end
-
-    r = makereader(toks)
-    def = parseFunDef(r)
-    print(def)
-
-    compileFunDef(def)
 end
+
+function compile(stmt::ASTReturnStmt)
+    # assume expressions evaluate themselves to %eax
+    compile(stmt.expr)
+    println(io, "popq %rbp")
+    println(io, "ret")
+end
+
+function compile(n::TokenNum)
+    # TODO make sure this integer fits into 64 bits
+    println(io, "movl \$$(n.n), %eax")
+end
+
+end # module JCC

@@ -1,9 +1,46 @@
 #+title: JCC: A C compiler written in Julia
 
 * Links
+
 - [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf][latest revision of the C99 standard]]
 - [[http://scheme2006.cs.uchicago.edu/11-ghuloum.pdf][An Incremental Approach to Compiler Construction (A. Ghuloum)]]
 
 * Plan
+
 Follow Ghuloum's paper closely, by making a working interpreter for
 [[file:test.c]].
+
+* Julia specific
+
+- [[https://docs.julialang.org/en/v1/manual/workflow-tips/][REPL-based workflow]]
+- [[https://discourse.julialang.org/t/proper-way-of-organizing-code-into-subpackages/52835/5][Useful links for module usage]]
+- [[https://docs.julialang.org/en/v1/manual/modules/#Submodules-and-relative-paths][Modules - Julia documentation]]
+- for jump to definition: can simply use ~etags *.jl~
+
+* Notes
+
+Finish the first step of Ghuloum's paper (emit assembly for the
+=return 42= main function), then refactor the code into multiple files
+and possibly modules (i.e. =token=, =parse=, and =compile=).
+
+** TODO Put all the AST types in a module to avoid prefixing them with AST
+
+** Implementing assembly generation
+   
+- use a single compile function (and multiple dispatch): ~compile(t)~,
+  and a global state ~io~ for the output stream
+- function related assembly done, now compile body
+- how is a function organized ?
+  - return type :: 
+  - declarator :: to simplify, =function_name(function_params)=
+  - compound statement for the body
+
+** Notes about assembly
+- use AT&T syntax, since it is what's used by Ghuloum and the GNU
+  Assembler
+
+Size suffixes:
+| suffix      | b    | s                    | w    | l                    | q    | t        |
+| meaning     | byte | short / single       | word | long                 | quad | ten      |
+|-------------+------+----------------------+------+----------------------+------+----------|
+| size (bits) | 8    | 16 (int), 32 (float) | 16   | 32 (int), 64 (float) | 64   | 80 float |
