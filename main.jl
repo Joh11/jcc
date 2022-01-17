@@ -1,7 +1,6 @@
 import Base.peek
 
 # open file
-
 function readfile(path="test.c")
     open(path) do f
         join(readlines(f), "\n")
@@ -98,7 +97,7 @@ end
 function consumeType(r::Reader, type)
     tok = peek(r)
     if !(typeof(tok) <: type)
-        error("wrong type for token: expeced $type, got $(tok)")
+        error("wrong type for token: expected $type, got $(tok)")
     else
         next(r)
     end
@@ -187,4 +186,34 @@ function parseFunDef(r)
     decltor = parseDecltor(r)
     stmt = parseCmpdStmt(r)
     ASTFunDef(type, decltor, stmt)
+end
+
+
+# emit assembly
+function compileFunDef(def::ASTFunDef, io=stdout)
+    println(io, "$(def.decltor.id):")
+    # TODO continue from here
+end
+
+# unit tests
+using Test
+
+begin
+    text = "int main()\n{\n    return 42;\n}"
+    toks = tokenize(text)
+
+    @testset "tokenizer" begin
+        @test toks == [
+            TokenId("int"), TokenId("main"), TokenPunct("("), TokenPunct(")"),
+            TokenPunct("{"),
+            TokenKw("return"), TokenNum(42), TokenPunct(";"),
+            TokenPunct("}")
+        ]
+    end
+
+    r = makereader(toks)
+    def = parseFunDef(r)
+    print(def)
+
+    compileFunDef(def)
 end
