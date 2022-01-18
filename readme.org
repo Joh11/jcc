@@ -34,6 +34,22 @@ and possibly modules (i.e. =token=, =parse=, and =compile=).
   - return type :: 
   - declarator :: to simplify, =function_name(function_params)=
   - compound statement for the body
+- write the assembly myself to see what is necessary
+#+begin_src asm
+	  .text
+	  .globl _start
+
+  _start:
+	  /* exit() with the return value of main */
+	  call main
+	  mov %rax, %rdi
+	  mov $60, %rax
+	  syscall
+
+  main:	
+	  mov $42, %rax
+	  ret
+#+end_src
 
 ** Notes about assembly
 - use AT&T syntax, since it is what's used by Ghuloum and the GNU

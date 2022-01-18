@@ -14,7 +14,20 @@ toks = tokenize(text)
     ]
 end
 
-r = makereader(toks)
-def = parseFunDef(r)
+@testset "compile assembly for return 42" begin
+    r = makereader(toks)
+    def = parseFunDef(r)
 
-compile(def)
+    # dump assembly to a file
+    open("test.s", "w") do f
+        withio(f) do
+            compileprelude()
+            compile(def)
+        end
+    end
+
+    # compile it with as and ld
+    run(`as -o test.o test.s`)
+    run(`ld -o test test.o`)
+    @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
+end
