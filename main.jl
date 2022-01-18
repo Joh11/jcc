@@ -2,11 +2,11 @@ module JCC
 
 import Base.peek
 
-export tokenize
-export TokenId, TokenPunct, TokenKw, TokenNum
-export makereader
-export parseFunDef
-export compile, withio, compileprelude
+# export tokenize
+# # export TokensId, Tokens.Punct, Tokens.Kw, Tokens.Num
+# export makereader
+# export parseFunDef
+# export compile, withio, compileprelude
 
 # open file
 function readfile(path="test.c")
@@ -17,69 +17,11 @@ end
 
 # Tokenizer stuff
 
-struct TokenNum
-    n :: Int
+module Tokens
+include("token.jl")
 end
 
-struct TokenId
-    str :: String
-end
-
-struct TokenPunct
-    str :: String
-end
-
-struct TokenKw
-    str :: String
-end
-
-const Token = Union{TokenNum, TokenId, TokenPunct, TokenKw}
-
-function tokenize(text)
-    tokens = Token[]
-    i = 1
-    while i <= length(text)
-        # skip whitespaces
-        if isspace(text[i]) i += 1; continue end
-
-        if isdigit(text[i]) # start parsing a numeral
-            token = string(text[i])
-            i += 1
-            while i <= length(text) && isdigit(text[i])
-                token *= text[i]
-                i += 1
-            end
-            push!(tokens, TokenNum(parse(Int, token)))
-            # TODO put other punctuators
-        elseif text[i] in "[](){}.;" # see punctuators A.1.7 
-            push!(tokens, TokenPunct(string(text[i])))
-            i += 1
-        elseif isnondigit(text[i])
-            token = string(text[i])
-            i += 1 # 1st char cannot be a digit, but the others yes
-            while i <= length(text) && (isnondigit(text[i]) || isdigit(text[i]))
-                token *= text[i]
-                i += 1
-            end
-
-            # discriminate between identifiers and keywords
-            push!(tokens, iskeyword(token) ? TokenKw(token) : TokenId(token))
-        else
-            error("unhandled character $(text[i])")
-        end
-    end
-    tokens
-end
-
-"as defined in the standard, A.1.3"
-function isnondigit(c)
-    c == '_' || isletter(c)
-end
-
-function iskeyword(str)
-    # TODO put all A.1.2
-    str in ["return"]
-end
+using .Tokens
 
 # Parser stuff
 
@@ -121,18 +63,18 @@ function consume(r::Reader, val)
 end
 
 struct ASTParamDecl
-    type :: TokenId
-    id :: TokenId
+    type :: Tokens.Id
+    id :: Tokens.Id
 end
 
 struct ASTDecl
-    specs :: Vector{TokenKw}
-    id :: TokenId # TODO false
+    specs :: Vector{Tokens.Kw}
+    id :: Tokens.Id # TODO false
 end
 
 struct ASTDecltor
     # TODO add the rest 6.7.5
-    id :: TokenId
+    id :: Tokens.Id
     params :: Vector{ASTParamDecl}
 end
 
@@ -142,7 +84,7 @@ struct ASTCmpdStmt
 end
 
 struct ASTReturnStmt
-    expr :: TokenNum # TODO for now
+    expr :: Tokens.Num # TODO for now
 end
 
 const ASTJumpStmt = Union{ASTReturnStmt}
@@ -150,7 +92,7 @@ const ASTStmt = Union{ASTCmpdStmt, ASTJumpStmt}
 
 struct ASTFunDef
     # TODO add the rest 6.9.1
-    type :: TokenId
+    type :: Tokens.Id
     decltor :: ASTDecltor
     stmt :: ASTCmpdStmt
 end
@@ -161,36 +103,35 @@ struct ASTTU # translation unit
     decls :: Vector{ASTFunDef}
 end
 
-
 # parse stuff
 function parseDecltor(r)
-    id = consumeType(r, TokenId)
+    id = consumeType(r, Tokens.Id)
     params = ASTParamDecl[]
-    if(peek(r) == TokenPunct("("))
+    if(peek(r) == Tokens.Punct("("))
         next(r) # consume it
-        consume(r, TokenPunct(")")) # consume )
+        consume(r, Tokens.Punct(")")) # consume )
     end
     ASTDecltor(id, params)
 end
 
 function parseReturnStmt(r)
-    consume(r, TokenKw("return"))
-    n = consumeType(r, TokenNum)
+    consume(r, Tokens.Kw("return"))
+    n = consumeType(r, Tokens.Num)
     ASTReturnStmt(n)
 end
 
 function parseCmpdStmt(r)
-    consume(r, TokenPunct("{"))
+    consume(r, Tokens.Punct("{"))
 
     s = parseReturnStmt(r)
     # TODO change
-    consume(r, TokenPunct("}"))
+    consume(r, Tokens.Punct("}"))
     
     ASTCmpdStmt([s])
 end
 
 function parseFunDef(r)
-    type = consumeType(r, TokenId)
+    type = consumeType(r, Tokens.Id)
     decltor = parseDecltor(r)
     stmt = parseCmpdStmt(r)
     ASTFunDef(type, decltor, stmt)
@@ -244,7 +185,7 @@ function compile(stmt::ASTReturnStmt)
     println(io, "ret")
 end
 
-function compile(n::TokenNum)
+function compile(n::Tokens.Num)
     # TODO make sure this integer fits into 64 bits
     println(io, "movl \$$(n.n), %eax")
 end

@@ -3,26 +3,26 @@ using .JCC
 
 using Test
 text = "int main()\n{\n    return 42;\n}"
-toks = tokenize(text)
+toks = JCC.tokenize(text)
 
 @testset "tokenizer" begin
     @test toks == [
-        TokenId("int"), TokenId("main"), TokenPunct("("), TokenPunct(")"),
-        TokenPunct("{"),
-        TokenKw("return"), TokenNum(42), TokenPunct(";"),
-        TokenPunct("}")
+        JCC.Tokens.Id("int"), JCC.Tokens.Id("main"), JCC.Tokens.Punct("("), JCC.Tokens.Punct(")"),
+        JCC.Tokens.Punct("{"),
+        JCC.Tokens.Kw("return"), JCC.Tokens.Num(42), JCC.Tokens.Punct(";"),
+        JCC.Tokens.Punct("}")
     ]
 end
 
 @testset "compile assembly for return 42" begin
-    r = makereader(toks)
-    def = parseFunDef(r)
+    r = JCC.makereader(toks)
+    def = JCC.parseFunDef(r)
 
     # dump assembly to a file
     open("test.s", "w") do f
-        withio(f) do
-            compileprelude()
-            compile(def)
+        JCC.withio(f) do
+            JCC.compileprelude()
+            JCC.compile(def)
         end
     end
 
