@@ -31,13 +31,11 @@ function compileprelude()
 end
 
 function compile(def::AST.FunDef)
-    # println(io, "# function $(def.decltor.id.str)")
     println(io, "$(def.decltor.id.str):")
     println(io, "push %rbp")
     println(io, "movq %rsp, %rbp")
-    
-    # TODO compile body
-    # Union{ASTDecl, ASTStmt}
+
+    # compile body
     for stmt in def.stmt.items
         compile(stmt)
     end

@@ -19,39 +19,21 @@ Follow Ghuloum's paper closely, by making a working interpreter for
 
 * Notes
 
-Finish the first step of Ghuloum's paper (emit assembly for the
-=return 42= main function), then refactor the code into multiple files
-and possibly modules (i.e. =token=, =parse=, and =compile=).
+** TODO Make the test run inside a temporary dir
 
-** TODO Put all the AST types in a module to avoid prefixing them with AST
+** TODO Try compiling a program with addition of literals
 
 ** Implementing assembly generation
    
-- use a single compile function (and multiple dispatch): ~compile(t)~,
-  and a global state ~io~ for the output stream
-- function related assembly done, now compile body
 - how is a function organized ?
   - return type :: 
   - declarator :: to simplify, =function_name(function_params)=
   - compound statement for the body
-- write the assembly myself to see what is necessary
-#+begin_src asm
-	  .text
-	  .globl _start
-
-  _start:
-	  /* exit() with the return value of main */
-	  call main
-	  mov %rax, %rdi
-	  mov $60, %rax
-	  syscall
-
-  main:	
-	  mov $42, %rax
-	  ret
-#+end_src
+- =_start= will be the entry point, and will call =main=, to make it
+  like an ordinary function, able to use =ret= and so on
 
 ** Notes about assembly
+   
 - use AT&T syntax, since it is what's used by Ghuloum and the GNU
   Assembler
 
