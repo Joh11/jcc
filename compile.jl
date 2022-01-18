@@ -3,6 +3,11 @@ using ..AST
 
 export withio, compileprelude, compile
 
+# emit assembly
+
+# all functions for code generation will have the form `compile(t)`,
+# and use a global state to control the output stream
+
 global io = stdout
 
 function withio(f, s)
