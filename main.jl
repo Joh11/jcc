@@ -92,6 +92,7 @@ function rpn(s::AST.BinaryOp{AST.ExprC})
     ret * "binary-op "
 end
 
+rpn(n::Nothing) = "nothing "
 rpn(kw::Tokens.Kw) = "#$(kw.str) "
 rpn(id::Tokens.Id) = "<$(id.str)> "
 rpn(n::Tokens.Num) = "\$$(n.n) "

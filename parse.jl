@@ -198,9 +198,13 @@ function parseIfStmt(r)
 end
 
 function parseExprStmt(r)
-    e = parseExpr(r)
-    consume(r, Tokens.Punct(";"))
-    AST.ExprStmt(e)
+    if peekis(r, Tokens.Punct(";"))
+        AST.ExprStmt()
+    else
+        e = parseExpr(r)
+        consume(r, Tokens.Punct(";"))
+        AST.ExprStmt(e)
+    end
 end
 
 function parseCmpdStmt(r)

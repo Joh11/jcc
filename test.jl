@@ -73,7 +73,9 @@ end
     r(str) = P.makereader(T.tokenize(str))
     @test P.parseStmt(r("return 3;")) == A.ReturnStmt(T.Num(3))
     @test P.parseStmt(r("b = 2;")) == A.ExprStmt(A.AssignExpr(T.Id("b"), T.Punct("="), T.Num(2)))
+    @test P.parseStmt(r(";")) == A.ExprStmt()
     @test P.parseStmt(r("if(a){}")) == A.IfStmt(T.Id("a"), A.CmpdStmt([]))
+    @test P.parseStmt(r("if(a){}else;")) == A.IfStmt(T.Id("a"), A.CmpdStmt([]), A.ExprStmt())
 end
 
 @testset "step 1: integers" begin
