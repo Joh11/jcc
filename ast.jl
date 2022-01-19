@@ -131,7 +131,7 @@ end
 IfStmt(cond, then) = IfStmt(cond, then, nothing)
 
 const JumpStmt = Union{ReturnStmt}
-const Stmt = Union{CmpdStmt, ExprStmt, JumpStmt}
+const Stmt = Union{CmpdStmt, ExprStmt, IfStmt, JumpStmt}
 
 Base.:(==)(x::CmpdStmt, y::CmpdStmt) = x.items == y.items
 Base.:(==)(x::IfStmt, y::IfStmt) = x.cond == y.cond && x.then == y.then && x.els == y.els

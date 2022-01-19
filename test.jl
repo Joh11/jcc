@@ -192,9 +192,11 @@ int main()
 }
 """
     toks = JCC.tokenize(text)
-    # r = JCC.makereader(toks)
-    # def = JCC.parseFunDef(r)
+    r = JCC.makereader(toks)
+    def = JCC.parseFunDef(r)
 
-    # dumpassembly(def)
-    # assemblecheck42()
+    @warn JCC.rpn(def)
+    
+    dumpassembly(def)
+    assemblecheck42()
 end

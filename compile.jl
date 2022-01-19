@@ -17,9 +17,10 @@ mutable struct Context
     io :: IO
     topstack :: Int
     envs :: Vector{Env}
+    nextlabel :: Int
 end
 
-global ctx = Context(stdout, 0, [])
+global ctx = Context(stdout, 0, [], 0)
 
 function withio(f, s)
     global ctx
@@ -67,6 +68,11 @@ end
 
 envget(id::Tokens.Id) = envget(id.str)
 
+function newlabel()
+    ctx.nextlabel += 1
+    "L$(ctx.nextlabel-1)"
+end
+
 function compileprelude()
     emit(".text")
     emit(".globl _start")
@@ -91,7 +97,7 @@ function compile(stmt::AST.CmpdStmt)
     # split between declarations and statements
     decls = filter(x -> x isa AST.Decl, stmt.items)
     stmts = filter(x -> x isa AST.Stmt, stmt.items)
-
+    
     pushenv()
     for decl in decls
         # check they are all int for now
@@ -131,6 +137,30 @@ end
 
 function compile(stmt::AST.ExprStmt)
     compile(stmt.expr)
+end
+
+function compile(stmt::AST.IfStmt)
+    # evaluate the condition
+    compile(stmt.cond)
+    emit("cmp \$0, %eax")
+
+    elselabel = newlabel()
+    endlabel = newlabel()
+
+    # jump if the comparaison was true
+    emit("je $elselabel")
+
+    # then
+    compile(stmt.then)
+    emit("jmp $endlabel")
+
+    # else
+    emit("$elselabel:")
+    if !isnothing(stmt.els)
+        compile(stmt.els)
+    end
+
+    emit("$endlabel:")
 end
 
 function compile(stmt::AST.ReturnStmt)
