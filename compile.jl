@@ -25,7 +25,9 @@ end
 
 "Emit the given string to the context IO"
 function emit(str)
-    println(ctx.io, str)
+    # put a tab for any nonlabel instruction
+    tab = isempty(str) || str[end] == ':' ? "" : "\t"
+    println(ctx.io, tab * str)
 end
 
 """Allocate `nbytes` on the stack. Actually decrease `ctx.topstack` by
