@@ -9,40 +9,43 @@ T = JCC.Tokens
 P = JCC.Parse
 A = JCC.AST
 
+"Assemble `test.s`, link it, and make sure it returns 42"
+function assemblecheck42()
+    run(`as -o test.o test.s`)
+    run(`ld -o test test.o`)
+    @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
+end
 
-text = """
-    int main()
-    {
-        return 42;
-    }
-    """
-toks = JCC.tokenize(text)
+function dumpassembly(ast, filename="test.s")
+    open(filename, "w") do f
+        JCC.withio(f) do
+            JCC.compileprelude()
+            JCC.compile(ast)
+        end
+    end
+end
 
-@testset "tokenizer" begin
+@testset "step 1: integers" begin
+    text = """
+int main()
+{
+    return 42;
+}
+"""
+    toks = JCC.tokenize(text)
+
     @test toks == [
         JCC.Tokens.Id("int"), JCC.Tokens.Id("main"), JCC.Tokens.Punct("("), JCC.Tokens.Punct(")"),
         JCC.Tokens.Punct("{"),
         JCC.Tokens.Kw("return"), JCC.Tokens.Num(42), JCC.Tokens.Punct(";"),
         JCC.Tokens.Punct("}")
     ]
-end
-
-@testset "compile assembly for return 42" begin
+    
     r = JCC.makereader(toks)
     def = JCC.parseFunDef(r)
 
-    # dump assembly to a file
-    open("test.s", "w") do f
-        JCC.withio(f) do
-            JCC.compileprelude()
-            JCC.compile(def)
-        end
-    end
-
-    # compile it with as and ld
-    run(`as -o test.o test.s`)
-    run(`ld -o test test.o`)
-    @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
+    dumpassembly(def)
+    assemblecheck42()
 end
 
 # various unit tests for parsing expressions
@@ -91,15 +94,13 @@ end
 end
 
 
-# Goal: end to end compilation of a program with operators (+
-# here)
-@testset "operators" begin
+@testset "step 4: binary primitives" begin
     text = """
-        int main()
-        {
-            return 40 + 2;
-        }
-        """
+int main()
+{
+    return 40 + 2;
+}
+"""
     toks = JCC.tokenize(text)
     @test toks == [
         JCC.Tokens.Id("int"), JCC.Tokens.Id("main"), JCC.Tokens.Punct("("), JCC.Tokens.Punct(")"),
@@ -120,28 +121,18 @@ end
                                                       T.Punct("+")))
                           ]))
 
-    # dump assembly to a file
-    open("test.s", "w") do f
-        JCC.withio(f) do
-            JCC.compileprelude()
-            JCC.compile(def)
-        end
-    end
-    
-    # compile it with as and ld
-    run(`as -o test.o test.s`)
-    run(`ld -o test test.o`)
-    @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
+    dumpassembly(def)
+    assemblecheck42()
 end
 
-# Ghuloum step 2 (I know I did it backward ...): unary primitives
-@testset "step 2: unary primitives" begin
+# Ghuloum step 3 (I know I did it backward ...): unary primitives
+@testset "step 3: unary primitives" begin
     text = """
-        int main()
-        {
-            return -6 * (-11 + 4);
-        }
-        """
+int main()
+{
+    return -6 * (-11 + 4);
+}
+"""
     toks = JCC.tokenize(text)
     @test toks == [
         T.Id("int"), T.Id("main"), T.Punct("("), T.Punct(")"),
@@ -157,48 +148,27 @@ end
 
     r = JCC.makereader(toks)
     def = JCC.parseFunDef(r)
-    
-    # dump assembly to a file
-    open("test.s", "w") do f
-        JCC.withio(f) do
-            JCC.compileprelude()
-            JCC.compile(def)
-        end
-    end
 
-    # compile it with as and ld
-    run(`as -o test.o test.s`)
-    run(`ld -o test test.o`)
-    @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
+    dumpassembly(def)
+    assemblecheck42()
 end
 
-# Ghuloum step 2 (I know I did it backward ...): unary primitives
-@testset "step 2: unary primitives" begin
+# Ghuloum step 5: local variables
+@testset "step 5: local variables" begin
     text = """
-        int main()
-        {
-            int a = 22;
-            int b;
-            b = 2;
-            b = 4;
-            return a + b;
-        }
-        """
+int main()
+{
+    int a = 40;
+    int b;
+    b = 4;
+    b = 2;
+    return a + b;
+}
+"""
     toks = JCC.tokenize(text)
     r = JCC.makereader(toks)
     def = JCC.parseFunDef(r)
 
-    # dump assembly to a file
-    open("test.s", "w") do f
-        JCC.withio(f) do
-            JCC.compileprelude()
-            JCC.compile(def)
-        end
-    end
-
-    # compile it with as and ld
-    run(`as -o test.o test.s`)
-    run(`ld -o test test.o`)
-    @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 26
+    dumpassembly(def)
+    assemblecheck42()
 end
-

@@ -30,8 +30,6 @@ Follow Ghuloum's paper closely.
 
 * Notes
 
-** TODO Make the test run inside a temporary dir
-
 ** DONE Try compiling a program with addition of literals
 
 How does the stack work ?
@@ -49,7 +47,7 @@ How does the stack work ?
 Will be simpler than binary ops.
 - is =-10= parsed as an unary op or a constant ? :: as an unary op
 
-** TODO Local variables
+** DONE Local variables
 - can variables be local to any compound statement in C99 ? :: yes I think
 - how to deal with nested environments ?
   - use a stack (vector) of Dict{String, Int}
@@ -57,6 +55,9 @@ Will be simpler than binary ops.
     - pop this stack of envs, along with the stack counter when block
       is over
 - first deal with assignment expressions
+
+** TODO Conditional expressions
+
 ** Implementing assembly generation
    
 - how is a function organized ?
