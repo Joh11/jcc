@@ -67,6 +67,17 @@ function rpn(s::AST.ExprStmt)
     ret * "; "
 end
 
+function rpn(s::AST.IfStmt)
+    ret = rpn(s.cond)
+    ret *= rpn(s.then)
+    ret *= "if "
+    if !isnothing(s.els)
+        ret *= rpn(s.els)
+        ret * "else "
+    end
+    ret
+end
+
 function rpn(s::AST.AssignExpr)
     ret = rpn(s.a)
     ret *= rpn(s.op)

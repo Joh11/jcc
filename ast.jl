@@ -128,6 +128,7 @@ struct IfStmt
     then :: Any # TODO should be Stmt
     els :: Any # TODO should be Union{Stmt, Nothing}
 end
+IfStmt(cond, then) = IfStmt(cond, then, nothing)
 
 const JumpStmt = Union{ReturnStmt}
 const Stmt = Union{CmpdStmt, ExprStmt, JumpStmt}

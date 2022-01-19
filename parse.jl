@@ -171,18 +171,13 @@ end
 
 function parseStmt(r)
     # TODO all other statements
-    @info "parse stmt $(peek(r))"
     if peekis(r, Tokens.Punct("{"))
-        @info "parse cmpd stmt"
         parseCmpdStmt(r)
     elseif peekis(r, Tokens.Kw("if"))
-        @info "parse if stmt"
         parseIfStmt(r)
     elseif peekis(r, Tokens.Kw("return"))
-        @info "parse return stmt"
         parseReturnStmt(r)
     else
-        @info "parse expr stmt"
         parseExprStmt(r)
     end
 end
@@ -194,7 +189,7 @@ function parseIfStmt(r)
     consume(r, Tokens.Punct(")"))
     then = parseStmt(r)
     els = nothing
-    if peekis(r, Token.Kw("else"))
+    if peekis(r, Tokens.Kw("else"))
         next(r)
         els = parseStmt(r)
     end

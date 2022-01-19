@@ -64,8 +64,6 @@ end
 # various unit tests for parsing declarations
 @testset "declarations" begin
     r(str) = P.makereader(T.tokenize(str))
-    @warn JCC.rpn(P.parseDecl(r("int x;")))
-    @warn JCC.rpn(A.Decl([T.Kw("int")], [A.Decltor(T.Id("x"))]))
     @test P.parseDecl(r("int x;")) == A.Decl([T.Kw("int")], [A.Decltor(T.Id("x"))])
     @test P.parseDecl(r("int x = 5;")) == A.Decl([T.Kw("int")], [A.DecltorWithInit(A.Decltor(T.Id("x")), T.Num(5))])
 end
@@ -192,7 +190,6 @@ int main()
 }
 """
     toks = JCC.tokenize(text)
-    for t in toks println(t) end
     # r = JCC.makereader(toks)
     # def = JCC.parseFunDef(r)
 

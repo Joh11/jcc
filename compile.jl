@@ -95,7 +95,7 @@ function compile(stmt::AST.CmpdStmt)
     pushenv()
     for decl in decls
         # check they are all int for now
-        @assert decl.specs == [Tokens.Id("int")]
+        @assert decl.specs == [Tokens.Kw("int")]
         for initd in decl.initds
             dd = initd isa AST.Decltor ? initd.direct : initd.decltor.direct
             @assert dd isa Tokens.Id
@@ -108,7 +108,7 @@ function compile(stmt::AST.CmpdStmt)
     # initialize the variables if required
     for decl in decls
         # check they are all int for now
-        @assert decl.specs == [Tokens.Id("int")]
+        @assert decl.specs == [Tokens.Kw("int")]
         for initd in decl.initds
             if initd isa AST.DecltorWithInit
                 name = initd.decltor.direct.str
