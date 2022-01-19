@@ -2,7 +2,15 @@ include("main.jl")
 using .JCC
 
 using Test
-text = "int main()\n{\n    return 42;\n}"
+
+# Step 1 from Ghuloum
+
+text = """
+int main()
+{
+    return 42;
+}
+"""
 toks = JCC.tokenize(text)
 
 @testset "tokenizer" begin
@@ -31,3 +39,24 @@ end
     run(`ld -o test test.o`)
     @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
 end
+
+# Goal: end to end compilation of a program with operators (+
+# here)
+@testset "operators" begin
+    text = """
+    int main()
+    {
+        return 40 + 2;
+    }
+    """
+    toks = JCC.tokenize(text)
+    @test toks == [
+        JCC.Tokens.Id("int"), JCC.Tokens.Id("main"), JCC.Tokens.Punct("("), JCC.Tokens.Punct(")"),
+        JCC.Tokens.Punct("{"),
+        JCC.Tokens.Kw("return"),
+        JCC.Tokens.Num(40), JCC.Tokens.Punct("+"), JCC.Tokens.Num(2), JCC.Tokens.Punct(";"),
+        JCC.Tokens.Punct("}")
+    ]
+end
+
+
