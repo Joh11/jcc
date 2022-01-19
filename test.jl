@@ -57,6 +57,14 @@ end
         JCC.Tokens.Num(40), JCC.Tokens.Punct("+"), JCC.Tokens.Num(2), JCC.Tokens.Punct(";"),
         JCC.Tokens.Punct("}")
     ]
-end
 
+    r = JCC.makereader(toks)
+    def = JCC.parseFunDef(r)
+    @test def == JCC.AST.FunDef(JCC.Tokens.Id("int"),
+                                JCC.AST.Decltor(JCC.Tokens.Id("main"), JCC.AST.ParamDecl[]),
+                                JCC.AST.CmpdStmt([
+                                    JCC.AST.ReturnStmt(JCC.Tokens.Num(40))
+                                ]))
+
+end
 

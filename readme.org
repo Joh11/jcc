@@ -16,6 +16,9 @@ Follow Ghuloum's paper closely, by making a working interpreter for
 - [[https://discourse.julialang.org/t/proper-way-of-organizing-code-into-subpackages/52835/5][Useful links for module usage]]
 - [[https://docs.julialang.org/en/v1/manual/modules/#Submodules-and-relative-paths][Modules - Julia documentation]]
 - for jump to definition: can simply use ~etags *.jl~
+- default equality test for structures compare fields using ~===~
+  (identity), not ~==~ (equality). Define it manually to i.e. compare
+  ASTs.
 
 * Notes
 

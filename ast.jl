@@ -16,10 +16,14 @@ struct Decltor
     params :: Vector{ParamDecl}
 end
 
+Base.:(==)(x::Decltor, y::Decltor) = x.id == y.id && x.params == y.params
+
 struct CmpdStmt
     # TODO for now only compound statements
     items :: Vector{Any} # Union{Decl, Stmt} (mutually recursive...)
 end
+
+Base.:(==)(x::CmpdStmt, y::CmpdStmt) = x.items == y.items
 
 struct ReturnStmt
     expr :: Tokens.Num # TODO for now
@@ -33,6 +37,10 @@ struct FunDef
     type :: Tokens.Id
     decltor :: Decltor
     stmt :: CmpdStmt
+end
+
+function Base.:(==)(x::FunDef, y::FunDef)
+    x.type == y.type && x.decltor == y.decltor && x.stmt == y.stmt
 end
 
 # See A.2.4 for this
