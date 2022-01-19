@@ -13,13 +13,17 @@ function makereader(tokens)
     Reader(1, tokens)
 end
 
+function isempty(r :: Reader)
+    r.pos > length(r.tokens)
+end
+
 function peek(r :: Reader)
-    r.tokens[r.pos]
+    isempty(r) ? Tokens.EOF : r.tokens[r.pos]
 end
 
 function next(r :: Reader)
     r.pos += 1
-    r.tokens[r.pos - 1]
+    (r.pos - 1) <= length(r.tokens) ? r.tokens[r.pos - 1] : Tokens.EOF
 end
 
 function consumeType(r::Reader, type)
@@ -33,8 +37,8 @@ end
 
 function consume(r::Reader, val)
     tok = peek(r)
-    if typeof(tok) == val
-        error("unexpected token: expeced $val, got $tok")
+    if tok != val
+        error("unexpected token: expected $val, got $tok")
     else
         next(r)
     end
@@ -53,8 +57,12 @@ end
 
 function parseReturnStmt(r)
     consume(r, Tokens.Kw("return"))
-    n = consumeType(r, Tokens.Num)
-    AST.ReturnStmt(n)
+    e = nothing
+    if peek(r) != Tokens.Punct(";")
+        e = parseExpr(r)
+    end
+    consume(r, Tokens.Punct(";"))
+    AST.ReturnStmt(e)
 end
 
 function parseCmpdStmt(r)
@@ -73,3 +81,53 @@ function parseFunDef(r)
     stmt = parseCmpdStmt(r)
     AST.FunDef(type, decltor, stmt)
 end
+
+function parseParenExpr(r)
+    consume(r, Tokens.Punct("("))
+    e = parseExpr(r)
+    consume(r, Tokens.Punct(")"))
+    e
+end
+
+function parsePrimExpr(r)
+    t = peek(r)
+    if t isa Tokens.Punct
+        parseParenExpr(r)
+    elseif t isa Tokens.Num || t isa Tokens.Id
+        next(r)
+    end
+end
+
+function parseExpr(r)
+    # I think the idea would be to try to parse the top of the AST
+    # hierarchy (that is an assignment expression)
+
+    # since for now assignments expression are not implemented, it
+    # would be the second, that is conditional-expr
+
+    # these are not implemented yet either, and so on, so start with
+    # additive-expression
+
+    # TODO implement the full tower
+    parseAddExpr(r)
+end
+
+function parseAddExpr(r)
+    operands = Any[parseMultExpr(r)]
+    ops = []
+    while peek(r) in [Tokens.Punct("+"), Tokens.Punct("-")]
+        push!(ops, next(r))
+        push!(operands, parseMultExpr(r))
+    end
+
+    # TODO construct the left recursive tree now
+    @assert length(operands) == length(ops) + 1
+    while length(ops) > 0
+        operands[1] = AST.BinaryOp(operands[1], operands[2], ops[1])
+        deleteat!(operands, 2)
+        popfirst!(ops)
+    end
+    operands[1]
+end
+
+parseMultExpr(r) = parsePrimExpr(r) # TODO for now

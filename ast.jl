@@ -1,5 +1,56 @@
 using ..Tokens
 
+# Expressions
+#=
+return 40+2;
+=>
+ReturnStmt(Expr([AssignmentExpr(CondExpr(LogORExpr(LogANDExpr())))]))
+
+we have a tower of syntax:
+expr -> assignmentexpr -> condexpr -> logical-OR-expression -> logical-AND-expression
+-> inclusive-OR-expression -> exclusive-OR-expression -> AND-expression
+-> equality-expression -> relational-expression -> shift-expression -> additive-expression
+-> multiplicative-expression -> cast-expression
+
+This is done to make the priority of operations built into the
+grammar. But for clarity we can reorder the hierarchy.
+
+We can follow clang AST:
+- binary-op expr expr punct
+- unary-op expr punct
+- cast expr type
+- paren-expr expr
+- assignment-expr ...
+- primary-expr
+
+ =#
+
+struct BinaryOp{T}
+    a :: T
+    b :: T
+    op :: Tokens.Punct
+    BinaryOp(a, b, op) = new{ExprC}(a, b, op)
+end
+
+struct UnaryOp{T}
+    a :: T
+    op :: Tokens.Punct
+    UnaryOp(a, op) = new{ExprC}(a, op)
+end
+
+struct ParenExpr{T}
+    e :: T
+    ParenExpr(e) = new{ExprC}(e)
+end
+
+const PrimExpr = Union{Tokens.Id, Tokens.Num, ParenExpr}
+
+# TODO put the rest
+const ExprC = Union{BinaryOp, UnaryOp, PrimExpr}
+
+Base.:(==)(x::BinaryOp{ExprC}, y::BinaryOp{ExprC}) = x.a == y.a && x.b == y.b && x.op == y.op
+
+
 struct ParamDecl
     type :: Tokens.Id
     id :: Tokens.Id
@@ -26,8 +77,9 @@ end
 Base.:(==)(x::CmpdStmt, y::CmpdStmt) = x.items == y.items
 
 struct ReturnStmt
-    expr :: Tokens.Num # TODO for now
+    expr :: Union{ExprC, Nothing}
 end
+ReturnStmt() = ReturnStmt(nothing)
 
 const JumpStmt = Union{ReturnStmt}
 const Stmt = Union{CmpdStmt, JumpStmt}

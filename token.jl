@@ -16,7 +16,9 @@ struct Kw
     str :: String
 end
 
-const Token = Union{Num, Id, Punct, Kw}
+struct EOF end
+
+const Token = Union{Num, Id, Punct, Kw, EOF}
 
 # see 6.4.6
 const punctfirst = "[](){}.-+&*~!/%<>=^|?:;,#"

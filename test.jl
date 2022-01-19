@@ -40,6 +40,16 @@ end
     @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
 end
 
+# various unit tests for parsing expressions
+@testset "expressions" begin
+    r(str) = JCC.Parse.makereader(JCC.Tokens.tokenize(str))
+    @test JCC.Parse.parsePrimExpr(r("42 f")) == JCC.Tokens.Num(42)
+    @test JCC.Parse.parsePrimExpr(r("f 42")) == JCC.Tokens.Id("f")
+    @test_throws ErrorException JCC.Parse.parsePrimExpr(r(";42"))
+    
+    @test JCC.Parse.parseAddExpr(r("42 + 4")) == JCC.AST.BinaryOp(JCC.Tokens.Num(42), JCC.Tokens.Num(4), JCC.Tokens.Punct("+"))
+end
+
 # Goal: end to end compilation of a program with operators (+
 # here)
 @testset "operators" begin
@@ -63,7 +73,9 @@ end
     @test def == JCC.AST.FunDef(JCC.Tokens.Id("int"),
                                 JCC.AST.Decltor(JCC.Tokens.Id("main"), JCC.AST.ParamDecl[]),
                                 JCC.AST.CmpdStmt([
-                                    JCC.AST.ReturnStmt(JCC.Tokens.Num(40))
+                                    JCC.AST.ReturnStmt(JCC.AST.BinaryOp(JCC.Tokens.Num(40),
+                                                                        JCC.Tokens.Num(2),
+                                                                        JCC.Tokens.Punct("+")))
                                 ]))
 
 end
