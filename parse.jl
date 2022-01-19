@@ -85,7 +85,7 @@ function parseInitDecltor(r)
     if peekis(r, Tokens.Punct("="))
         next(r)
         # TODO for now
-        init = consumeType(r, Tokens.Id)
+        init = consumeType(r, Tokens.Num)
         AST.DecltorWithInit(d, init)
     else
         d

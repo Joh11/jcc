@@ -39,6 +39,13 @@ function rpn(dd::AST.DDParams)
     ret * "direct-declarator-params "
 end
 
+function rpn(d::AST.DecltorWithInit)
+    ret = rpn(d.decltor)
+    ret *= rpn(d.init)
+    ret * "declarator-w/-init "
+end
+
+
 function rpn(f::AST.FunDef)
     ret = rpn(f.specs)
     ret *= rpn(f.decltor)
@@ -47,7 +54,8 @@ function rpn(f::AST.FunDef)
 end
 
 rpn(kw::Tokens.Kw) = "#$(kw.str) "
-rpn(kw::Tokens.Id) = "<$(kw.str)> "
+rpn(id::Tokens.Id) = "<$(id.str)> "
+rpn(n::Tokens.Num) = "\$$(n.n) "
 
 function rpn(xs::Vector{T} where T)
     ret = ""

@@ -9,12 +9,6 @@ T = JCC.Tokens
 P = JCC.Parse
 A = JCC.AST
 
-# various unit tests for parsing declarations
-@testset "declarations" begin
-    r(str) = P.makereader(T.tokenize(str))
-    @test P.parseDecl(r("int x;")) == A.Decl([T.Id("int")], [A.Decltor(T.Id("x"))])
-end
-
 
 text = """
     int main()
@@ -80,6 +74,12 @@ end
     )
 end
 
+# various unit tests for parsing declarations
+@testset "declarations" begin
+    r(str) = P.makereader(T.tokenize(str))
+    @test P.parseDecl(r("int x;")) == A.Decl([T.Id("int")], [A.Decltor(T.Id("x"))])
+    @test P.parseDecl(r("int x = 5;")) == A.Decl([T.Id("int")], [A.DecltorWithInit(A.Decltor(T.Id("x")), T.Num(5))])
+end
 
 # Goal: end to end compilation of a program with operators (+
 # here)
@@ -101,15 +101,6 @@ end
 
     r = JCC.makereader(toks)
     def = JCC.parseFunDef(r)
-    @warn "got     : " * JCC.rpn(def)
-    @warn "expected: " * JCC.rpn(A.FunDef([T.Id("int")],
-                                          A.Decltor(A.DDParams(T.Id("main"),
-                                                               [], false)),
-                                          A.CmpdStmt([
-                                              A.ReturnStmt(A.BinaryOp(T.Num(40),
-                                                                      T.Num(2),
-                                                                      T.Punct("+")))
-                                          ])))
     @test def == A.FunDef([T.Id("int")],
                           A.Decltor(A.DDParams(T.Id("main"),
                                                [], false)),
@@ -182,6 +173,5 @@ end
         }
         """
     toks = JCC.tokenize(text)
-    for t in toks println(t, ",") end
 end
 
