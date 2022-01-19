@@ -254,8 +254,13 @@ function parseAssignExpr(r)
         AST.AssignExpr(a, op, b)
     else
         r.pos = pos # come back
-        parseAddExpr(r)
+        parseCondExpr(r)
     end
+end
+
+function parseCondExpr(r)
+    # TODO
+    parseEqExpr(r)
 end
 
 function leftrectree!(operands, ops)
@@ -267,6 +272,19 @@ function leftrectree!(operands, ops)
         popfirst!(ops)
     end
     operands[1]
+end
+
+function parseEqExpr(r)
+    # TODO skip rel expr for now
+    operands = Any[parseAddExpr(r)]
+    ops = []
+    while peek(r) in [Tokens.Punct("=="), Tokens.Punct("!=")]
+        push!(ops, next(r))
+        push!(operands, parseAddExpr(r))
+    end
+
+    # construct the left recursive tree now
+    leftrectree!(operands, ops)
 end
 
 function parseAddExpr(r)

@@ -77,6 +77,10 @@ end
 
     # assignment
     @test P.parseExpr(r("b = 2")) == A.AssignExpr(T.Id("b"), T.Punct("="), T.Num(2))
+
+    # equality
+    @test P.parseExpr(r("b == 2")) == A.BinaryOp(T.Id("b"), T.Num(2), T.Punct("=="))
+    @test P.parseExpr(r("x2 != a")) == A.BinaryOp(T.Id("x2"), T.Id("a"), T.Punct("!="))
 end
 
 # various unit tests for parsing declarations
@@ -153,7 +157,6 @@ int main()
     assemblecheck42()
 end
 
-# Ghuloum step 5: local variables
 @testset "step 5: local variables" begin
     text = """
 int main()
@@ -171,4 +174,24 @@ int main()
 
     dumpassembly(def)
     assemblecheck42()
+end
+
+@testset "step 6: conditionals" begin
+    text = """
+int main()
+{
+    int a = 1;
+    int b;
+    if(a == 0) b = 1;
+    else { b = 41; }
+    return a + b;
+}
+"""
+    toks = JCC.tokenize(text)
+    for t in toks println(t) end
+    # r = JCC.makereader(toks)
+    # def = JCC.parseFunDef(r)
+
+    # dumpassembly(def)
+    # assemblecheck42()
 end

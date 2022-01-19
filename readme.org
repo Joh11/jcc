@@ -22,6 +22,11 @@ Follow Ghuloum's paper closely.
   recursive types
 
 * Dump of things to implement
+- comparaison operators (parse)
+- logical operators (parse)
+- bitwise operators (parse)
+- ternary (parse)
+- loops
 - my own assembler
 - my own linker
 - constant propagation / static optimizations (i.e. replace =40+2= by
