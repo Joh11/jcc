@@ -58,6 +58,19 @@ end
 
     # unary op
     @test P.parseUniExpr(r("-2")) == A.UnaryOp(T.Num(2), T.Punct("-"))
+    @test P.parseExpr(r("-2 * 3")) == A.BinaryOp(
+        A.UnaryOp(T.Num(2), T.Punct("-")),
+        T.Num(3),
+        T.Punct("*")
+    )
+    # TODO fix it
+    @test_broken P.parseExpr(r("-3 * (-11 + 4)")) == A.BinaryOp(
+        A.UnaryOp(T.Num(3), T.Punct("-")),
+        A.ParenExpr(A.BinaryOp(A.UnaryOp(T.Num(11), T.Punct("-")),
+                               T.Num(4),
+                               T.Punct("+"))),
+        T.Punct("*")
+    )
 end
 
 # Goal: end to end compilation of a program with operators (+
@@ -107,7 +120,7 @@ end
     text = """
     int main()
     {
-        return -3 * (-11 + 4);
+        return -6 * (-11 + 4);
     }
     """
     toks = JCC.tokenize(text)
@@ -115,7 +128,7 @@ end
         T.Id("int"), T.Id("main"), T.Punct("("), T.Punct(")"),
         T.Punct("{"),
         T.Kw("return"),
-        T.Punct("-"), T.Num(3), T.Punct("*"),
+        T.Punct("-"), T.Num(6), T.Punct("*"),
         T.Punct("("),
         T.Punct("-"), T.Num(11), T.Punct("+"), T.Num(4),
         T.Punct(")"),
@@ -125,6 +138,13 @@ end
 
     r = JCC.makereader(toks)
     def = JCC.parseFunDef(r)
-    println(def)
+
+    # dump assembly to a file
+    open("test.s", "w") do f
+        JCC.withio(f) do
+            JCC.compileprelude()
+            JCC.compile(def)
+        end
+    end
 end
 
