@@ -65,7 +65,8 @@ struct ParamDecl
 end
 
 # TODO for now
-const Specifier = Union{Tokens.Id}
+const Spec = Union{Tokens.Kw}
+# TODO add StructUnionSpec, EnumSpec
 
 # DD stands for direct-declarator
 struct DDParen{T}
@@ -80,7 +81,7 @@ struct DDParams{T}
     DDParams(dd, params, ell) = new{DirectDecltor}(dd, params, ell)
 end
 
-const DirectDecltor = Union{Tokens.Id, DDParen, DDParams}
+const DirectDecltor = Union{Tokens.Id, Tokens.Kw, DDParen, DDParams}
 
 function Base.:(==)(a::DDParams{DirectDecltor}, b::DDParams{DirectDecltor})
     a.dd == b.dd && a.params == b.params && a.ell == b.ell
@@ -91,7 +92,6 @@ struct Decltor
     direct :: DirectDecltor
 end
 Decltor(direct::DirectDecltor) = Decltor(nothing, direct)
-Base.:(==)(x::Decltor, y::Decltor) = x.ptr == y.ptr && x.direct == y.direct
 
 struct DecltorWithInit
     decltor :: Decltor
@@ -101,17 +101,17 @@ end
 const InitDecltor = Union{Decltor, DecltorWithInit}
 
 struct Decl
-    specs :: Vector{Specifier}
+    specs :: Vector{Spec}
     initds :: Vector{InitDecltor}
 end
+
+Base.:(==)(x::Decltor, y::Decltor) = x.ptr == y.ptr && x.direct == y.direct
 Base.:(==)(x::Decl, y::Decl) = x.specs == y.specs && x.initds == y.initds
 
 struct CmpdStmt
     # TODO for now only compound statements
     items :: Vector{Any} # Union{Decl, Stmt} (mutually recursive...)
 end
-
-Base.:(==)(x::CmpdStmt, y::CmpdStmt) = x.items == y.items
 
 struct ReturnStmt
     expr :: Union{ExprC, Nothing}
@@ -123,12 +123,21 @@ struct ExprStmt
 end
 ExprStmt() = ExprStmt(nothing)
 
+struct IfStmt
+    cond :: ExprC
+    then :: Any # TODO should be Stmt
+    els :: Any # TODO should be Union{Stmt, Nothing}
+end
+
 const JumpStmt = Union{ReturnStmt}
 const Stmt = Union{CmpdStmt, ExprStmt, JumpStmt}
 
+Base.:(==)(x::CmpdStmt, y::CmpdStmt) = x.items == y.items
+Base.:(==)(x::IfStmt, y::IfStmt) = x.cond == y.cond && x.then == y.then && x.els == y.els
+
 struct FunDef
     # TODO add the rest 6.9.1
-    specs :: Vector{Specifier}
+    specs :: Vector{Spec}
     decltor :: Decltor
     stmt :: CmpdStmt
 end

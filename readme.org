@@ -63,6 +63,15 @@ Will be simpler than binary ops.
 
 ** TODO Conditional expressions
 
+** TODO Stateful parsing
+
+I need a way to keep track in real time of which identifiers are used
+for typedefs.
+
+For now I can just forget about that, and do as if typedef did not
+exist. This allows for the =declaration-specifiers= to be purely
+keywords.
+   
 ** Implementing assembly generation
    
 - how is a function organized ?

@@ -59,8 +59,17 @@ end
 # declaration stuff
 
 function parseSpecifier(r)
-    # TODO for now
-    consume(r, Tokens.Id("int"))
+    # TODO add struct union enum and typedef specifier
+    if peekistype(r, Tokens.Kw)
+        kw = peek(r)
+        if kw.str in ["typedef", "extern", "static", "auto", "register"]
+            return next(r) # storage class specifier
+        elseif kw.str in ["void", "char", "short", "int", "long", "float",
+                           "double", "signed", "unsigned", "_Bool", "_Complex"]
+            return next(r) # type specifier
+        end
+    end
+    error("unable to parse specifier")
 end
 
 function parseManySpecifiers(r)
@@ -123,7 +132,7 @@ end
 function parseDD(r)
     if peek(r) == Tokens.Punct("(") # ( declarator )
         parseDDParen(r)
-    elseif peek(r) isa Tokens.Id
+    elseif peek(r) isa Tokens.Id || peek(r) isa Tokens.Kw
         id = next(r)
         n = peek(r)
         if n == Tokens.Punct("(")
@@ -162,13 +171,35 @@ end
 
 function parseStmt(r)
     # TODO all other statements
+    @info "parse stmt $(peek(r))"
     if peekis(r, Tokens.Punct("{"))
+        @info "parse cmpd stmt"
         parseCmpdStmt(r)
+    elseif peekis(r, Tokens.Kw("if"))
+        @info "parse if stmt"
+        parseIfStmt(r)
     elseif peekis(r, Tokens.Kw("return"))
+        @info "parse return stmt"
         parseReturnStmt(r)
     else
+        @info "parse expr stmt"
         parseExprStmt(r)
     end
+end
+
+function parseIfStmt(r)
+    consume(r, Tokens.Kw("if"))
+    consume(r, Tokens.Punct("("))
+    cond = parseExpr(r)
+    consume(r, Tokens.Punct(")"))
+    then = parseStmt(r)
+    els = nothing
+    if peekis(r, Token.Kw("else"))
+        next(r)
+        els = parseStmt(r)
+    end
+    
+    AST.IfStmt(cond, then, els)
 end
 
 function parseExprStmt(r)
@@ -201,7 +232,6 @@ function parseCmpdStmt(r)
 end
 
 function parseFunDef(r)
-    # new
     specs = parseManySpecifiers(r)
     decltor = parseDecltor(r)
     # TODO declaration list, but this is old so low priority

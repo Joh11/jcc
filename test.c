@@ -1,4 +1,3 @@
-int main()
-{
-    return 40 + 2;
-}
+typedef int K;
+
+K a();
