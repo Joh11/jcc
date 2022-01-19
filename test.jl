@@ -194,8 +194,6 @@ int main()
     toks = JCC.tokenize(text)
     r = JCC.makereader(toks)
     def = JCC.parseFunDef(r)
-
-    @warn JCC.rpn(def)
     
     dumpassembly(def)
     assemblecheck42()

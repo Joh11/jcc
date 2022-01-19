@@ -195,6 +195,8 @@ function compile(e::AST.BinaryOp{AST.ExprC})
         emit("addl $(ctx.topstack)(%rsp), %eax")
     elseif op == Tokens.Punct("*")
         emit("imull $(ctx.topstack)(%rsp), %eax")
+    elseif op == Tokens.Punct("==")
+        emit("cmpl $(ctx.topstack)(%rsp), %eax")
     else
         error("nyi: binary op $(e.op)")
     end
