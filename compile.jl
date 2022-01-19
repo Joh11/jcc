@@ -53,7 +53,7 @@ function compileprelude()
 end
 
 function compile(def::AST.FunDef)
-    emit("$(def.decltor.id.str):")
+    emit("$(def.decltor.direct.dd.str):")
     emit("push %rbp")
     emit("movq %rsp, %rbp")
 

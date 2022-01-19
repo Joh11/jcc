@@ -7,8 +7,7 @@
 
 * Plan
 
-Follow Ghuloum's paper closely, by making a working interpreter for
-[[file:test.c]].
+Follow Ghuloum's paper closely. 
 
 * Julia specific
 
@@ -33,7 +32,7 @@ Follow Ghuloum's paper closely, by making a working interpreter for
 
 ** TODO Make the test run inside a temporary dir
 
-** TODO Try compiling a program with addition of literals
+** DONE Try compiling a program with addition of literals
 
 How does the stack work ?
 - assume everything writes to =%eax=
@@ -45,10 +44,12 @@ How does the stack work ?
 - for this I need a way to keep track of the stack size
   - I can change io to context, and use a single global
 
-** TODO Unary primitives
+** DONE Unary primitives
 
 Will be simpler than binary ops.
 - is =-10= parsed as an unary op or a constant ? :: as an unary op
+
+** TODO Local variables
 
 ** Implementing assembly generation
    

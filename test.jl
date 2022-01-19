@@ -9,12 +9,19 @@ T = JCC.Tokens
 P = JCC.Parse
 A = JCC.AST
 
+# various unit tests for parsing declarations
+@testset "declarations" begin
+    r(str) = P.makereader(T.tokenize(str))
+    @test P.parseDecl(r("int x;")) == A.Decl([T.Id("int")], [A.Decltor(T.Id("x"))])
+end
+
+
 text = """
-int main()
-{
-    return 42;
-}
-"""
+    int main()
+    {
+        return 42;
+    }
+    """
 toks = JCC.tokenize(text)
 
 @testset "tokenizer" begin
@@ -73,15 +80,16 @@ end
     )
 end
 
+
 # Goal: end to end compilation of a program with operators (+
 # here)
 @testset "operators" begin
     text = """
-    int main()
-    {
-        return 40 + 2;
-    }
-    """
+        int main()
+        {
+            return 40 + 2;
+        }
+        """
     toks = JCC.tokenize(text)
     @test toks == [
         JCC.Tokens.Id("int"), JCC.Tokens.Id("main"), JCC.Tokens.Punct("("), JCC.Tokens.Punct(")"),
@@ -93,13 +101,23 @@ end
 
     r = JCC.makereader(toks)
     def = JCC.parseFunDef(r)
-    @test def == JCC.AST.FunDef(JCC.Tokens.Id("int"),
-                                JCC.AST.Decltor(JCC.Tokens.Id("main"), JCC.AST.ParamDecl[]),
-                                JCC.AST.CmpdStmt([
-                                    JCC.AST.ReturnStmt(JCC.AST.BinaryOp(JCC.Tokens.Num(40),
-                                                                        JCC.Tokens.Num(2),
-                                                                        JCC.Tokens.Punct("+")))
-                                ]))
+    @warn "got     : " * JCC.rpn(def)
+    @warn "expected: " * JCC.rpn(A.FunDef([T.Id("int")],
+                                          A.Decltor(A.DDParams(T.Id("main"),
+                                                               [], false)),
+                                          A.CmpdStmt([
+                                              A.ReturnStmt(A.BinaryOp(T.Num(40),
+                                                                      T.Num(2),
+                                                                      T.Punct("+")))
+                                          ])))
+    @test def == A.FunDef([T.Id("int")],
+                          A.Decltor(A.DDParams(T.Id("main"),
+                                               [], false)),
+                          A.CmpdStmt([
+                              A.ReturnStmt(A.BinaryOp(T.Num(40),
+                                                      T.Num(2),
+                                                      T.Punct("+")))
+                          ]))
 
     # dump assembly to a file
     open("test.s", "w") do f
@@ -118,11 +136,11 @@ end
 # Ghuloum step 2 (I know I did it backward ...): unary primitives
 @testset "step 2: unary primitives" begin
     text = """
-    int main()
-    {
-        return -6 * (-11 + 4);
-    }
-    """
+        int main()
+        {
+            return -6 * (-11 + 4);
+        }
+        """
     toks = JCC.tokenize(text)
     @test toks == [
         T.Id("int"), T.Id("main"), T.Punct("("), T.Punct(")"),
@@ -150,5 +168,20 @@ end
     run(`as -o test.o test.s`)
     run(`ld -o test test.o`)
     @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
+end
+
+# Ghuloum step 2 (I know I did it backward ...): unary primitives
+@testset "step 2: unary primitives" begin
+    text = """
+        int main()
+        {
+            int a = 40;
+            int b;
+            b = 2;
+            return a + b;
+        }
+        """
+    toks = JCC.tokenize(text)
+    for t in toks println(t, ",") end
 end
 

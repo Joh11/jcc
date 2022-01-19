@@ -57,18 +57,47 @@ struct ParamDecl
     id :: Tokens.Id
 end
 
-struct Decl
-    specs :: Vector{Tokens.Kw}
-    id :: Tokens.Id # TODO false
+# TODO for now
+const Specifier = Union{Tokens.Id}
+
+# DD stands for direct-declarator
+struct DDParen{T}
+    decltor :: T
+    DDParen(decltor) = new{Decltor}(decltor)
+end
+
+struct DDParams{T}
+    dd :: T
+    params :: Vector{ParamDecl}
+    ell :: Bool # true if ends with ...
+    DDParams(dd, params, ell) = new{DirectDecltor}(dd, params, ell)
+end
+
+const DirectDecltor = Union{Tokens.Id, DDParen, DDParams}
+
+function Base.:(==)(a::DDParams{DirectDecltor}, b::DDParams{DirectDecltor})
+    a.dd == b.dd && a.params == b.params && a.ell == b.ell
 end
 
 struct Decltor
-    # TODO add the rest 6.7.5
-    id :: Tokens.Id
-    params :: Vector{ParamDecl}
+    ptr :: Union{Nothing} # for now
+    direct :: DirectDecltor
+end
+Decltor(direct::DirectDecltor) = Decltor(nothing, direct)
+Base.:(==)(x::Decltor, y::Decltor) = x.ptr == y.ptr && x.direct == y.direct
+
+struct DecltorWithInit
+    decltor :: Decltor
+    init :: Tokens.Num # TODO for now
 end
 
-Base.:(==)(x::Decltor, y::Decltor) = x.id == y.id && x.params == y.params
+const InitDecltor = Union{Decltor, DecltorWithInit}
+
+struct Decl
+    specs :: Vector{Specifier}
+    initds :: Vector{InitDecltor}
+end
+Base.:(==)(x::Decl, y::Decl) = x.specs == y.specs && x.initds == y.initds
 
 struct CmpdStmt
     # TODO for now only compound statements
@@ -87,13 +116,13 @@ const Stmt = Union{CmpdStmt, JumpStmt}
 
 struct FunDef
     # TODO add the rest 6.9.1
-    type :: Tokens.Id
+    specs :: Vector{Specifier}
     decltor :: Decltor
     stmt :: CmpdStmt
 end
 
 function Base.:(==)(x::FunDef, y::FunDef)
-    x.type == y.type && x.decltor == y.decltor && x.stmt == y.stmt
+    x.specs == y.specs && x.decltor == y.decltor && x.stmt == y.stmt
 end
 
 # See A.2.4 for this

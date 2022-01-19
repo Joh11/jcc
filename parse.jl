@@ -21,6 +21,15 @@ function peek(r :: Reader)
     isempty(r) ? Tokens.EOF : r.tokens[r.pos]
 end
 
+function peekis(r::Reader, val)
+    peek(r) == val
+end
+
+function peekistype(r::Reader, type)
+    typeof(peek(r)) <: type
+end
+
+
 function next(r :: Reader)
     r.pos += 1
     (r.pos - 1) <= length(r.tokens) ? r.tokens[r.pos - 1] : Tokens.EOF
@@ -45,14 +54,100 @@ function consume(r::Reader, val)
 end
 
 # parse stuff
-function parseDecltor(r)
-    id = consumeType(r, Tokens.Id)
-    params = AST.ParamDecl[]
-    if(peek(r) == Tokens.Punct("("))
-        next(r) # consume it
-        consume(r, Tokens.Punct(")")) # consume )
+
+
+# declaration stuff
+
+function parseSpecifier(r)
+    # TODO for now
+    consume(r, Tokens.Id("int"))
+end
+
+function parseManySpecifiers(r)
+    # parse specifiers, as many as possible
+    specs = []
+    c = true
+    while c
+        try push!(specs, parseSpecifier(r))
+        catch err
+            if err isa ErrorException
+                c = false
+            else
+                rethrow()
+            end
+        end
     end
-    AST.Decltor(id, params)
+    specs
+end
+
+function parseInitDecltor(r)
+    d = parseDecltor(r)
+    if peekis(r, Tokens.Punct("="))
+        next(r)
+        # TODO for now
+        init = consumeType(r, Tokens.Id)
+        AST.DecltorWithInit(d, init)
+    else
+        d
+    end
+end
+
+function parseDecl(r)
+    specs = parseManySpecifiers(r)
+
+    initdecltors = []
+    while peek(r) != Tokens.Punct(";")
+        push!(initdecltors, parseInitDecltor(r))
+    end
+    consume(r, Tokens.Punct(";"))
+
+    AST.Decl(specs, initdecltors)
+end
+
+function parseDDParen(r)
+    consume(r, Tokens.Punct("("))
+    d = parseDecltor(r)
+    consume(r, Tokens.Punct(")"))
+    AST.DDParen(d)
+end
+
+function parseParamList(r)
+    params = []
+    while !(peek(r) in [Tokens.Punct("..."), Tokens.Punct(")")])
+        # TODO do it better
+        error("nyi")
+    end
+    params
+end
+
+function parseDD(r)
+    if peek(r) == Tokens.Punct("(") # ( declarator )
+        parseDDParen(r)
+    elseif peek(r) isa Tokens.Id
+        id = next(r)
+        n = peek(r)
+        if n == Tokens.Punct("(")
+            ell = false
+            consume(r, Tokens.Punct("("))
+            params = parseParamList(r)
+            if peek(r) == Tokens.Punct("...")
+                consume(r, Tokens.Punct("..."))
+                ell = true
+            end
+            consume(r, Tokens.Punct(")"))
+            AST.DDParams(id, params, ell)
+        else
+            id
+        end
+    else
+        error("nyi dd, token $(peek(r))")
+    end
+end
+
+function parseDecltor(r)
+    # TODO parse pointer things
+    direct = parseDD(r)
+    AST.Decltor(direct)
 end
 
 function parseReturnStmt(r)
@@ -65,21 +160,40 @@ function parseReturnStmt(r)
     AST.ReturnStmt(e)
 end
 
+function parseStmt(r)
+    # TODO all other statements
+    if peek(r) == Tokens.Punct("{")
+        parseCmpdStmt(r)
+    else
+        parseReturnStmt(r)
+    end
+end
+
 function parseCmpdStmt(r)
     consume(r, Tokens.Punct("{"))
 
-    s = parseReturnStmt(r)
-    # TODO change
+    items = []
+    while peek(r) != Tokens.Punct("}")
+        # TODO try parsing a declaration or a statement
+        try 
+            push!(items, parseDecl(r))
+        catch err
+            push!(items, parseStmt(r))
+        end
+    end
     consume(r, Tokens.Punct("}"))
     
-    AST.CmpdStmt([s])
+    AST.CmpdStmt(items)
 end
 
 function parseFunDef(r)
-    type = consumeType(r, Tokens.Id)
+    # new
+    specs = parseManySpecifiers(r)
     decltor = parseDecltor(r)
+    # TODO declaration list, but this is old so low priority
     stmt = parseCmpdStmt(r)
-    AST.FunDef(type, decltor, stmt)
+
+    AST.FunDef(specs, decltor, stmt)
 end
 
 function parseParenExpr(r)
