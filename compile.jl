@@ -8,12 +8,18 @@ export withio, compileprelude, compile
 # all functions for code generation will have the form `compile(t)`,
 # and use a global state to control the output stream
 
-mutable struct Context
-    io :: IO
+mutable struct Env
+    vars :: Dict{String, Int}
     topstack :: Int
 end
 
-global ctx = Context(stdout, 0)
+mutable struct Context
+    io :: IO
+    topstack :: Int
+    envs :: Vector{Env}
+end
+
+global ctx = Context(stdout, 0, [])
 
 function withio(f, s)
     global ctx
@@ -41,6 +47,26 @@ function stackfree(nbytes)
     ctx.topstack += nbytes
 end
 
+function pushenv(vars::Dict{String, Int}=Dict{String, Int}())
+    push!(ctx.envs, Env(vars, ctx.topstack))
+end
+
+function popenv()
+    ctx.topstack = ctx.envs[end].topstack
+    pop!(ctx.envs)
+end
+
+function envget(id::String)
+    for k = length(ctx.envs):-1:1
+        if id in keys(ctx.envs[k].vars)
+            return ctx.envs[k].vars[id]
+        end
+    end
+    error("could not find the variable $id")
+end
+
+envget(id::Tokens.Id) = envget(id.str)
+
 function compileprelude()
     emit(".text")
     emit(".globl _start")
@@ -58,9 +84,53 @@ function compile(def::AST.FunDef)
     emit("movq %rsp, %rbp")
 
     # compile body
-    for stmt in def.stmt.items
+    compile(def.stmt)
+end
+
+function compile(stmt::AST.CmpdStmt)
+    # split between declarations and statements
+    decls = filter(x -> x isa AST.Decl, stmt.items)
+    stmts = filter(x -> x isa AST.Stmt, stmt.items)
+
+    pushenv()
+    for decl in decls
+        # check they are all int for now
+        @assert decl.specs == [Tokens.Id("int")]
+        for initd in decl.initds
+            dd = initd isa AST.Decltor ? initd.direct : initd.decltor.direct
+            @assert dd isa Tokens.Id
+            
+            stackalloc(4)
+            ctx.envs[end].vars[dd.str] = ctx.topstack
+        end
+    end
+
+    # initialize the variables if required
+    for decl in decls
+        # check they are all int for now
+        @assert decl.specs == [Tokens.Id("int")]
+        for initd in decl.initds
+            if initd isa AST.DecltorWithInit
+                name = initd.decltor.direct.str
+                init = initd.init
+
+                # TODO only if int
+                compile(init)
+                emit("movl %eax, $(envget(name))(%rsp)")
+            end
+        end
+    end
+    
+    # compile statements
+    for stmt in stmts
         compile(stmt)
     end
+
+    popenv()
+end
+
+function compile(stmt::AST.ExprStmt)
+    compile(stmt.expr)
 end
 
 function compile(stmt::AST.ReturnStmt)
@@ -68,6 +138,18 @@ function compile(stmt::AST.ReturnStmt)
     compile(stmt.expr)
     emit("popq %rbp")
     emit("ret")
+end
+
+function compile(e::AST.AssignExpr)
+    # TODO deal with non simple lvalue
+    compile(e.b)
+    # TODO deal with more operators later
+    @assert e.op == Tokens.Punct("=")
+    # TODO make sure a is real variable
+    @assert e.a isa Tokens.Id
+    offset = envget(e.a)
+    # TODO only works for int
+    emit("movl %eax, $(offset)(%rsp)")
 end
 
 function compile(e::AST.BinaryOp{AST.ExprC})
@@ -103,6 +185,10 @@ function compile(e::AST.ParenExpr{AST.ExprC})
     compile(e.e)
 end
 
+function compile(n::Tokens.Id)
+    # TODO only for int
+    emit("movl $(envget(n))(%rsp), %eax")
+end
 
 function compile(n::Tokens.Num)
     # TODO make sure this integer fits into 64 bits

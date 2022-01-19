@@ -45,17 +45,46 @@ function rpn(d::AST.DecltorWithInit)
     ret * "declarator-w/-init "
 end
 
+function rpn(s::AST.CmpdStmt)
+    ret = rpn(s.items)
+    ret * "{} "
+end
 
 function rpn(f::AST.FunDef)
     ret = rpn(f.specs)
     ret *= rpn(f.decltor)
-    # ret *= rpn(f.stmt) TODO
+    ret *= rpn(f.stmt)
     ret * "fundef "
+end
+
+function rpn(s::AST.ReturnStmt)
+    ret = rpn(s.expr)
+    ret * "return "
+end
+
+function rpn(s::AST.ExprStmt)
+    ret = rpn(s.expr)
+    ret * "; "
+end
+
+function rpn(s::AST.AssignExpr)
+    ret = rpn(s.a)
+    ret *= rpn(s.op)
+    ret *= rpn(s.b)
+    ret * "assign "
+end
+
+function rpn(s::AST.BinaryOp{AST.ExprC})
+    ret = rpn(s.a)
+    ret *= rpn(s.b)
+    ret *= rpn(s.op)
+    ret * "binary-op "
 end
 
 rpn(kw::Tokens.Kw) = "#$(kw.str) "
 rpn(id::Tokens.Id) = "<$(id.str)> "
 rpn(n::Tokens.Num) = "\$$(n.n) "
+rpn(p::Tokens.Punct) = ".$(p.str). "
 
 function rpn(xs::Vector{T} where T)
     ret = ""

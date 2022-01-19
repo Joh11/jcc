@@ -43,10 +43,17 @@ struct ParenExpr{T}
     ParenExpr(e) = new{ExprC}(e)
 end
 
+struct AssignExpr{T}
+    a :: T # this can only be an unary-expr or less in the tower
+    op :: Tokens.Punct
+    b :: T
+    AssignExpr(a, op, b) = new{ExprC}(a, op, b)
+end
+
 const PrimExpr = Union{Tokens.Id, Tokens.Num, ParenExpr}
 
 # TODO put the rest
-const ExprC = Union{BinaryOp, UnaryOp, PrimExpr}
+const ExprC = Union{AssignExpr, BinaryOp, UnaryOp, PrimExpr}
 
 Base.:(==)(x::BinaryOp{ExprC}, y::BinaryOp{ExprC}) = x.a == y.a && x.b == y.b && x.op == y.op
 Base.:(==)(x::UnaryOp{ExprC}, y::UnaryOp{ExprC}) = x.e == y.e && x.op == y.op
@@ -111,8 +118,13 @@ struct ReturnStmt
 end
 ReturnStmt() = ReturnStmt(nothing)
 
+struct ExprStmt
+    expr :: Union{ExprC, Nothing}
+end
+ExprStmt() = ExprStmt(nothing)
+
 const JumpStmt = Union{ReturnStmt}
-const Stmt = Union{CmpdStmt, JumpStmt}
+const Stmt = Union{CmpdStmt, ExprStmt, JumpStmt}
 
 struct FunDef
     # TODO add the rest 6.9.1

@@ -162,11 +162,19 @@ end
 
 function parseStmt(r)
     # TODO all other statements
-    if peek(r) == Tokens.Punct("{")
+    if peekis(r, Tokens.Punct("{"))
         parseCmpdStmt(r)
-    else
+    elseif peekis(r, Tokens.Kw("return"))
         parseReturnStmt(r)
+    else
+        parseExprStmt(r)
     end
+end
+
+function parseExprStmt(r)
+    e = parseExpr(r)
+    consume(r, Tokens.Punct(";"))
+    AST.ExprStmt(e)
 end
 
 function parseCmpdStmt(r)
@@ -175,10 +183,16 @@ function parseCmpdStmt(r)
     items = []
     while peek(r) != Tokens.Punct("}")
         # TODO try parsing a declaration or a statement
+        
+        # I flipped the parsing of stmt and decl, because it now
+        # parses correctly "b=5;" as an expression statement. Let's
+        # see if this is correct...
+        pos = r.pos
         try 
-            push!(items, parseDecl(r))
+            push!(items, parseStmt(r))            
         catch err
-            push!(items, parseStmt(r))
+            r.pos = pos # back to where it was
+            push!(items, parseDecl(r))
         end
     end
     consume(r, Tokens.Punct("}"))
@@ -223,7 +237,25 @@ function parseExpr(r)
     # additive-expression
 
     # TODO implement the full tower
-    parseAddExpr(r)
+    parseAssignExpr(r)
+end
+
+function parseAssignExpr(r)
+    # TODO do it properly with right recursive tree
+    # save it to backtrack
+    pos = r.pos
+    
+    a = parseUniExpr(r)
+    if peek(r) in map(Tokens.Punct, ["=", "*=", "/=", "%=",
+                                     "+=", "-=", "<<=", ">>=",
+                                     "&=", "^=", "|="])
+        op = next(r)
+        b = parseAddExpr(r)
+        AST.AssignExpr(a, op, b)
+    else
+        r.pos = pos # come back
+        parseAddExpr(r)
+    end
 end
 
 function leftrectree!(operands, ops)

@@ -50,7 +50,13 @@ Will be simpler than binary ops.
 - is =-10= parsed as an unary op or a constant ? :: as an unary op
 
 ** TODO Local variables
-
+- can variables be local to any compound statement in C99 ? :: yes I think
+- how to deal with nested environments ?
+  - use a stack (vector) of Dict{String, Int}
+    - int to store often on the stack
+    - pop this stack of envs, along with the stack counter when block
+      is over
+- first deal with assignment expressions
 ** Implementing assembly generation
    
 - how is a function organized ?
