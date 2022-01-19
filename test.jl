@@ -78,5 +78,17 @@ end
                                                                         JCC.Tokens.Punct("+")))
                                 ]))
 
+    # dump assembly to a file
+    open("test.s", "w") do f
+        JCC.withio(f) do
+            JCC.compileprelude()
+            JCC.compile(def)
+        end
+    end
+    
+    # compile it with as and ld
+    run(`as -o test.o test.s`)
+    run(`ld -o test test.o`)
+    @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
 end
 

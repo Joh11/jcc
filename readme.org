@@ -26,6 +26,16 @@ Follow Ghuloum's paper closely, by making a working interpreter for
 
 ** TODO Try compiling a program with addition of literals
 
+How does the stack work ?
+- assume everything writes to =%eax=
+- if a binary op:
+  - compile first subexp
+  - save eax to the stack
+  - compile second subexp
+  - add the two, and save to =%eax=
+- for this I need a way to keep track of the stack size
+  - I can change io to context, and use a single global
+
 ** Implementing assembly generation
    
 - how is a function organized ?
