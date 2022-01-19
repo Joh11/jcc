@@ -86,7 +86,7 @@ function parseParenExpr(r)
     consume(r, Tokens.Punct("("))
     e = parseExpr(r)
     consume(r, Tokens.Punct(")"))
-    e
+    AST.ParenExpr(e)
 end
 
 function parsePrimExpr(r)

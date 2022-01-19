@@ -64,7 +64,7 @@ end
         T.Punct("*")
     )
     # TODO fix it
-    @test_broken P.parseExpr(r("-3 * (-11 + 4)")) == A.BinaryOp(
+    @test P.parseExpr(r("-3 * (-11 + 4)")) == A.BinaryOp(
         A.UnaryOp(T.Num(3), T.Punct("-")),
         A.ParenExpr(A.BinaryOp(A.UnaryOp(T.Num(11), T.Punct("-")),
                                T.Num(4),
@@ -138,7 +138,6 @@ end
 
     r = JCC.makereader(toks)
     def = JCC.parseFunDef(r)
-
     # dump assembly to a file
     open("test.s", "w") do f
         JCC.withio(f) do
@@ -146,5 +145,10 @@ end
             JCC.compile(def)
         end
     end
+
+    # compile it with as and ld
+    run(`as -o test.o test.s`)
+    run(`ld -o test test.o`)
+    @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
 end
 

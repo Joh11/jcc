@@ -81,11 +81,28 @@ function compile(e::AST.BinaryOp{AST.ExprC})
     compile(e.b)
     if op == Tokens.Punct("+")
         emit("addl $(ctx.topstack)(%rsp), %eax")
-        stackfree(4) # bc 32 bits int
+    elseif op == Tokens.Punct("*")
+        emit("imull $(ctx.topstack)(%rsp), %eax")
     else
-        error("not yet implemented")
+        error("nyi: binary op $(e.op)")
+    end
+    stackfree(4) # bc 32 bits int
+end
+
+function compile(e::AST.UnaryOp{AST.ExprC})
+    compile(e.e)
+    # TODO beware of the size of the type
+    if e.op == Tokens.Punct("-")
+        emit("negl %eax")
+    else
+        error("nyi: unary op $(e.op)")
     end
 end
+
+function compile(e::AST.ParenExpr{AST.ExprC})
+    compile(e.e)
+end
+
 
 function compile(n::Tokens.Num)
     # TODO make sure this integer fits into 64 bits
