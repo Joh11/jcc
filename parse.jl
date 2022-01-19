@@ -112,15 +112,8 @@ function parseExpr(r)
     parseAddExpr(r)
 end
 
-function parseAddExpr(r)
-    operands = Any[parseMultExpr(r)]
-    ops = []
-    while peek(r) in [Tokens.Punct("+"), Tokens.Punct("-")]
-        push!(ops, next(r))
-        push!(operands, parseMultExpr(r))
-    end
-
-    # TODO construct the left recursive tree now
+function leftrectree!(operands, ops)
+    # used by all the binary ops
     @assert length(operands) == length(ops) + 1
     while length(ops) > 0
         operands[1] = AST.BinaryOp(operands[1], operands[2], ops[1])
@@ -130,4 +123,48 @@ function parseAddExpr(r)
     operands[1]
 end
 
-parseMultExpr(r) = parsePrimExpr(r) # TODO for now
+function parseAddExpr(r)
+    operands = Any[parseMultExpr(r)]
+    ops = []
+    while peek(r) in [Tokens.Punct("+"), Tokens.Punct("-")]
+        push!(ops, next(r))
+        push!(operands, parseMultExpr(r))
+    end
+
+    # construct the left recursive tree now
+    leftrectree!(operands, ops)
+end
+
+function parseMultExpr(r)
+    # TODO skip cast expr for now
+    operands = Any[parseUniExpr(r)]
+    ops = []
+    mulops = [Tokens.Punct(string(x)) for x in "*/%"]
+    while peek(r) in mulops
+        push!(ops, next(r))
+        push!(operands, parseUniExpr(r))
+    end
+
+    # construct the left recursive tree now
+    leftrectree!(operands, ops)    
+end
+
+# TODO skip cast expr for now
+parseCastExpr(r) = parseUniExpr(r)
+
+# TODO implement postfix expr
+parsePFExpr(r) = parsePrimExpr(r)
+
+function parseUniExpr(r)
+    # TODO parse the rest (6.5.3)
+    # that is postfix, ++, --, sizeof exp, sizeof(typename)
+
+    uniops = [Tokens.Punct(string(x)) for x in "&*+-~!"]
+    if peek(r) in uniops
+        op = next(r)
+        e = parseCastExpr(r)
+        AST.UnaryOp(e, op)
+    else
+        parsePFExpr(r)
+    end
+end

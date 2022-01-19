@@ -5,6 +5,10 @@ using Test
 
 # Step 1 from Ghuloum
 
+T = JCC.Tokens
+P = JCC.Parse
+A = JCC.AST
+
 text = """
 int main()
 {
@@ -42,12 +46,18 @@ end
 
 # various unit tests for parsing expressions
 @testset "expressions" begin
-    r(str) = JCC.Parse.makereader(JCC.Tokens.tokenize(str))
-    @test JCC.Parse.parsePrimExpr(r("42 f")) == JCC.Tokens.Num(42)
-    @test JCC.Parse.parsePrimExpr(r("f 42")) == JCC.Tokens.Id("f")
-    @test_throws ErrorException JCC.Parse.parsePrimExpr(r(";42"))
-    
-    @test JCC.Parse.parseAddExpr(r("42 + 4")) == JCC.AST.BinaryOp(JCC.Tokens.Num(42), JCC.Tokens.Num(4), JCC.Tokens.Punct("+"))
+    r(str) = P.makereader(T.tokenize(str))
+
+    # primary expr
+    @test P.parsePrimExpr(r("42 f")) == T.Num(42)
+    @test P.parsePrimExpr(r("f 42")) == T.Id("f")
+    @test_throws ErrorException P.parsePrimExpr(r(";42"))
+
+    # binary op (+)
+    @test P.parseAddExpr(r("42 + 4")) == A.BinaryOp(T.Num(42), T.Num(4), T.Punct("+"))
+
+    # unary op
+    @test P.parseUniExpr(r("-2")) == A.UnaryOp(T.Num(2), T.Punct("-"))
 end
 
 # Goal: end to end compilation of a program with operators (+
@@ -90,5 +100,31 @@ end
     run(`as -o test.o test.s`)
     run(`ld -o test test.o`)
     @test run(Cmd(`./test`, ignorestatus=true)).exitcode == 42
+end
+
+# Ghuloum step 2 (I know I did it backward ...): unary primitives
+@testset "step 2: unary primitives" begin
+    text = """
+    int main()
+    {
+        return -3 * (-11 + 4);
+    }
+    """
+    toks = JCC.tokenize(text)
+    @test toks == [
+        T.Id("int"), T.Id("main"), T.Punct("("), T.Punct(")"),
+        T.Punct("{"),
+        T.Kw("return"),
+        T.Punct("-"), T.Num(3), T.Punct("*"),
+        T.Punct("("),
+        T.Punct("-"), T.Num(11), T.Punct("+"), T.Num(4),
+        T.Punct(")"),
+        T.Punct(";"),
+        T.Punct("}")
+    ]
+
+    r = JCC.makereader(toks)
+    def = JCC.parseFunDef(r)
+    println(def)
 end
 

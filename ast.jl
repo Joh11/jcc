@@ -33,7 +33,7 @@ struct BinaryOp{T}
 end
 
 struct UnaryOp{T}
-    a :: T
+    e :: T
     op :: Tokens.Punct
     UnaryOp(a, op) = new{ExprC}(a, op)
 end
@@ -49,7 +49,21 @@ const PrimExpr = Union{Tokens.Id, Tokens.Num, ParenExpr}
 const ExprC = Union{BinaryOp, UnaryOp, PrimExpr}
 
 Base.:(==)(x::BinaryOp{ExprC}, y::BinaryOp{ExprC}) = x.a == y.a && x.b == y.b && x.op == y.op
+Base.:(==)(x::UnaryOp{ExprC}, y::UnaryOp{ExprC}) = x.e == y.e && x.op == y.op
 
+function Base.show(io::IO, x::BinaryOp{ExprC})
+    print(io, "(")
+    print(io, x.op.str)
+    print(io, " ")
+    show(io, x.a)
+    print(io, " ")
+    show(io, x.b)
+    print(io, ")")
+end
+
+function Base.show(io::IO, x::UnaryOp{ExprC})
+    print("($(x.op.str) $(x.e))")
+end
 
 struct ParamDecl
     type :: Tokens.Id
@@ -76,10 +90,29 @@ end
 
 Base.:(==)(x::CmpdStmt, y::CmpdStmt) = x.items == y.items
 
+function Base.show(io::IO, x::CmpdStmt)
+    print(io, "{\n")
+    for stmt in x.items
+        show(io, stmt)
+        print(io, "\n")
+    end
+    print(io, "}")
+end
+
 struct ReturnStmt
     expr :: Union{ExprC, Nothing}
 end
 ReturnStmt() = ReturnStmt(nothing)
+
+function Base.show(io::IO, x::ReturnStmt)
+    if isnothing(x.expr)
+        print(io, "(return)")
+    else
+        print(io, "(return")
+        show(io, x.expr)
+        print(io, ")")
+    end
+end
 
 const JumpStmt = Union{ReturnStmt}
 const Stmt = Union{CmpdStmt, JumpStmt}
@@ -93,6 +126,12 @@ end
 
 function Base.:(==)(x::FunDef, y::FunDef)
     x.type == y.type && x.decltor == y.decltor && x.stmt == y.stmt
+end
+
+function Base.show(io::IO, x::FunDef)
+    print(io, "($(x.type) $(x.decltor.id) $(x.decltor.params) \n")
+    show(io, x.stmt)
+    print(io, ")")
 end
 
 # See A.2.4 for this

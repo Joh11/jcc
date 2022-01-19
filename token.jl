@@ -20,6 +20,9 @@ struct EOF end
 
 const Token = Union{Num, Id, Punct, Kw, EOF}
 
+Base.show(io::IO, x::Num) = print(io, "\$$(x.n)")
+Base.show(io::IO, x::Id) = print(io, "<$(x.str)>")
+
 # see 6.4.6
 const punctfirst = "[](){}.-+&*~!/%<>=^|?:;,#"
 

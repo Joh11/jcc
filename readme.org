@@ -19,6 +19,15 @@ Follow Ghuloum's paper closely, by making a working interpreter for
 - default equality test for structures compare fields using ~===~
   (identity), not ~==~ (equality). Define it manually to i.e. compare
   ASTs.
+- see =AST.BinaryOp= for an example of how to define mutually
+  recursive types
+
+* Dump of things to implement
+- my own assembler
+- my own linker
+- constant propagation / static optimizations (i.e. replace =40+2= by
+  =42=)
+- proper type checking
 
 * Notes
 
@@ -35,6 +44,11 @@ How does the stack work ?
   - add the two, and save to =%eax=
 - for this I need a way to keep track of the stack size
   - I can change io to context, and use a single global
+
+** TODO Unary primitives
+
+Will be simpler than binary ops.
+- is =-10= parsed as an unary op or a constant ? :: as an unary op
 
 ** Implementing assembly generation
    
