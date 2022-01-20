@@ -289,57 +289,28 @@ end
 
 function parseCondExpr(r)
     # TODO
-    parseEqExpr(r)
+    parseLogOrExpr(r)
 end
 
-function leftrectree!(operands, ops)
-    # used by all the binary ops
-    @assert length(operands) == length(ops) + 1
-    while length(ops) > 0
-        operands[1] = AST.BinaryOp(operands[1], operands[2], ops[1])
-        deleteat!(operands, 2)
-        popfirst!(ops)
+"Parse a tree of binary expressions separated by one of the `seps`"
+function parseLeftRec(childparse, seps)
+    function(r)
+        operands = Any[childparse(r)]
+        ops = []
+        while peek(r) in seps
+            push!(ops, next(r))
+            push!(operands, childparse(r))
+        end
+
+        # used by all the binary ops
+        @assert length(operands) == length(ops) + 1
+        while length(ops) > 0
+            operands[1] = AST.BinaryOp(operands[1], operands[2], ops[1])
+            deleteat!(operands, 2)
+            popfirst!(ops)
+        end
+        operands[1]
     end
-    operands[1]
-end
-
-function parseEqExpr(r)
-    # TODO skip rel expr for now
-    operands = Any[parseAddExpr(r)]
-    ops = []
-    while peek(r) in [Tokens.Punct("=="), Tokens.Punct("!=")]
-        push!(ops, next(r))
-        push!(operands, parseAddExpr(r))
-    end
-
-    # construct the left recursive tree now
-    leftrectree!(operands, ops)
-end
-
-function parseAddExpr(r)
-    operands = Any[parseMultExpr(r)]
-    ops = []
-    while peek(r) in [Tokens.Punct("+"), Tokens.Punct("-")]
-        push!(ops, next(r))
-        push!(operands, parseMultExpr(r))
-    end
-
-    # construct the left recursive tree now
-    leftrectree!(operands, ops)
-end
-
-function parseMultExpr(r)
-    # TODO skip cast expr for now
-    operands = Any[parseUniExpr(r)]
-    ops = []
-    mulops = [Tokens.Punct(string(x)) for x in "*/%"]
-    while peek(r) in mulops
-        push!(ops, next(r))
-        push!(operands, parseUniExpr(r))
-    end
-
-    # construct the left recursive tree now
-    leftrectree!(operands, ops)    
 end
 
 # TODO skip cast expr for now
@@ -361,3 +332,9 @@ function parseUniExpr(r)
         parsePFExpr(r)
     end
 end
+
+const parseMultExpr = parseLeftRec(parseUniExpr, [Tokens.Punct(string(x)) for x in "*/%"])
+const parseAddExpr = parseLeftRec(parseMultExpr, [Tokens.Punct("+"), Tokens.Punct("-")])
+# TODO skip rel expr for now
+const parseEqExpr = parseLeftRec(parseAddExpr, [Tokens.Punct("=="), Tokens.Punct("!=")])
+const parseLogOrExpr = parseLeftRec(parseEqExpr, [Tokens.Punct("||")])

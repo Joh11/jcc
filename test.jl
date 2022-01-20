@@ -58,6 +58,10 @@ end
     # equality
     @test P.parseExpr(r("b == 2")) == A.BinaryOp(T.Id("b"), T.Num(2), T.Punct("=="))
     @test P.parseExpr(r("x2 != a")) == A.BinaryOp(T.Id("x2"), T.Id("a"), T.Punct("!="))
+
+    # logical or expr
+    @test P.parseExpr(r("b || 2")) == A.BinaryOp(T.Id("b"), T.Num(2), T.Punct("||"))
+    @test P.parseExpr(r("b || 2 || 3")) == A.BinaryOp(A.BinaryOp(T.Id("b"), T.Num(2), T.Punct("||")), T.Num(3), T.Punct("||"))
 end
 
 # various unit tests for parsing declarations
