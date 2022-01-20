@@ -336,5 +336,11 @@ end
 const parseMultExpr = parseLeftRec(parseUniExpr, [Tokens.Punct(string(x)) for x in "*/%"])
 const parseAddExpr = parseLeftRec(parseMultExpr, [Tokens.Punct("+"), Tokens.Punct("-")])
 # TODO skip rel expr for now
-const parseEqExpr = parseLeftRec(parseAddExpr, [Tokens.Punct("=="), Tokens.Punct("!=")])
-const parseLogOrExpr = parseLeftRec(parseEqExpr, [Tokens.Punct("||")])
+const parseRelExpr = parseLeftRec(parseAddExpr, map(Tokens.Punct, ["<", ">", "<=", ">="]))
+const parseEqExpr = parseLeftRec(parseRelExpr, [Tokens.Punct("=="), Tokens.Punct("!=")])
+const parseAndExpr = parseLeftRec(parseEqExpr, [Tokens.Punct("&")])
+const parseExOrExpr = parseLeftRec(parseAndExpr, [Tokens.Punct("^")])
+const parseIncOrExpr = parseLeftRec(parseExOrExpr, [Tokens.Punct("|")])
+const parseLogAndExpr = parseLeftRec(parseIncOrExpr, [Tokens.Punct("&&")])
+const parseLogOrExpr = parseLeftRec(parseLogAndExpr, [Tokens.Punct("||")])
+
