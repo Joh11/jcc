@@ -61,7 +61,7 @@ Will be simpler than binary ops.
       is over
 - first deal with assignment expressions
 
-** TODO Conditional expressions
+** DONE Conditional expressions
 
 ** TODO Stateful parsing
 
