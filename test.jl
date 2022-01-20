@@ -60,8 +60,8 @@ end
     @test P.parseExpr(r("x2 != a")) == A.BinaryOp(T.Id("x2"), T.Id("a"), T.Punct("!="))
 
     function checkbinaryop(op)
-        @test P.parseExpr(r("b $op 2")) == A.BinaryOp(T.Id("b"), T.Num(2), T.Punct("$op"))
-        @test P.parseExpr(r("b $op 2 $op 3")) == A.BinaryOp(A.BinaryOp(T.Id("b"), T.Num(2), T.Punct("$op")), T.Num(3), T.Punct("$op"))
+        @test P.parseExpr(r("b $op 2")) == A.BinaryOp(T.Id("b"), T.Num(2), T.Punct(op))
+        @test P.parseExpr(r("b $op 2 $op 3")) == A.BinaryOp(A.BinaryOp(T.Id("b"), T.Num(2), T.Punct(op)), T.Num(3), T.Punct(op))
     end
     
     checkbinaryop("||") # logical or expr
@@ -74,6 +74,16 @@ end
     checkbinaryop(">")
     checkbinaryop("<=")
     checkbinaryop(">=")
+
+    function checkunaryop(op)
+        @test P.parseExpr(r("$op b")) == A.UnaryOp(T.Id("b"), T.Punct(op))
+    end
+
+    for op in "&*+-~!"
+        checkunaryop(string(op))
+    end
+    checkunaryop("++")
+    checkunaryop("--")
 end
 
 # various unit tests for parsing declarations
