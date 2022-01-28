@@ -49,6 +49,12 @@ standard):
   int *a, b;
 #+end_src
 - only a is a pointer right ? :: yes
+
+Now we need to have a big piece. The tree for the grammar of
+declaration is quite cumbersome to parse type from declarations;
+furthermore, we have some redundancy with the type names (that is
+basically a declaration without an identifier, with some more
+subtleties).
 ** DONE Try compiling a program with addition of literals
 
 How does the stack work ?
