@@ -29,7 +29,6 @@ function peekistype(r::Reader, type)
     typeof(peek(r)) <: type
 end
 
-
 function next(r :: Reader)
     r.pos += 1
     (r.pos - 1) <= length(r.tokens) ? r.tokens[r.pos - 1] : Tokens.EOF
@@ -67,6 +66,8 @@ function parseSpecifier(r)
         elseif kw.str in ["void", "char", "short", "int", "long", "float",
                            "double", "signed", "unsigned", "_Bool", "_Complex"]
             return next(r) # type specifier
+        elseif kw.str in ["const", "restrict", "volatile"]
+            return next(r) # type qualifier
         end
     end
     error("unable to parse specifier")
