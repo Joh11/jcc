@@ -14,11 +14,13 @@ module Tokens include("token.jl") end
 module AST include("ast.jl") end
 module Parse include("parse.jl") end
 module Compile include("compile.jl") end
+module Types include("types.jl") end
 
 using .Tokens
 using .AST
 using .Parse
 using .Compile
+using .Types
 
 function rpn(d::AST.Decl)
     ret = rpn(d.specs)

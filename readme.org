@@ -31,7 +31,24 @@ Follow Ghuloum's paper closely.
 - proper type checking
 
 * Notes
-  
+
+** TODO Rudimentary type checking
+- idea:
+  - a function to build a type expression from a declaration
+  - a function to find the type of an expression, and if the
+    expression itself passes type check
+- for that I need to really understand how declarations work in C,
+  with all the subtleties of syntax.
+
+How to construct C types ? (every bold term is taken from the
+standard):
+- *basic types*: signed and unsigned integer types, floating types and
+  char
+
+#+begin_src c
+  int *a, b;
+#+end_src
+- only a is a pointer right ? :: yes
 ** DONE Try compiling a program with addition of literals
 
 How does the stack work ?

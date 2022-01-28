@@ -8,6 +8,7 @@ using Test
 T = JCC.Tokens
 P = JCC.Parse
 A = JCC.AST
+TT = JCC.Types
 
 "Assemble `test.s`, link it, and make sure it returns 42"
 function assemblecheck42()
@@ -93,9 +94,16 @@ end
 
 # various unit tests for parsing declarations
 @testset "declarations" begin
-    r(str) = P.makereader(T.tokenize(str))
+    r(str) = P.makereader(T.tokenize(str))    
     @test P.parseDecl(r("int x;")) == A.Decl([T.Kw("int")], [A.Decltor(T.Id("x"))])
+    @test P.parseDecl(r("static const int x;")) ==
+        A.Decl([T.Kw("static"), T.Kw("const"), T.Kw("int")], [A.Decltor(T.Id("x"))])
     @test P.parseDecl(r("int x = 5;")) == A.Decl([T.Kw("int")], [A.DecltorWithInit(A.Decltor(T.Id("x")), T.Num(5))])
+
+    # get the type of a declaration
+    @assert TT.gettype(P.parseDecl(r("int x;"))) == TT.Qualified(TT.BasicType("int"))
+    @assert TT.gettype(P.parseDecl(r("static void x;"))) == TT.Qualified(TT.BasicType("void"))
+    @assert TT.gettype(P.parseDecl(r("static const int x;"))) == TT.ConstQualified(TT.BasicType("int"))
 end
 
 # various unit tests for parsing statements
