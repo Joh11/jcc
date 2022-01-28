@@ -75,6 +75,10 @@ end
     checkbinaryop("<=")
     checkbinaryop(">=")
 
+    # shift operators
+    checkbinaryop(">>")
+    checkbinaryop("<<")
+
     function checkunaryop(op)
         @test P.parseExpr(r("$op b")) == A.UnaryOp(T.Id("b"), T.Punct(op))
     end
@@ -84,6 +88,7 @@ end
     end
     checkunaryop("++")
     checkunaryop("--")
+    @test P.parseExpr(r("sizeof b")) == A.UnaryOp(T.Id("b"), T.Kw("sizeof"))
 end
 
 # various unit tests for parsing declarations

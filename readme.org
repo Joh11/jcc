@@ -22,9 +22,6 @@ Follow Ghuloum's paper closely.
   recursive types
 
 * Dump of things to implement
-- comparaison operators (parse)
-- logical operators (parse)
-- bitwise operators (parse)
 - ternary (parse)
 - loops
 - my own assembler
@@ -34,7 +31,7 @@ Follow Ghuloum's paper closely.
 - proper type checking
 
 * Notes
-
+  
 ** DONE Try compiling a program with addition of literals
 
 How does the stack work ?

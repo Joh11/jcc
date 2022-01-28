@@ -34,7 +34,7 @@ end
 
 struct UnaryOp{T}
     e :: T
-    op :: Tokens.Punct
+    op :: Union{Tokens.Punct, Tokens.Kw}
     UnaryOp(a, op) = new{ExprC}(a, op)
 end
 

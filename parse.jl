@@ -332,6 +332,11 @@ function parseUniExpr(r)
         op = next(r)
         e = parseUniExpr(r)
         AST.UnaryOp(e, op)
+    elseif peekis(r, Tokens.Kw("sizeof"))
+        # TODO also add sizeof ( type-name )
+        op = next(r)
+        e = parseUniExpr(r)
+        AST.UnaryOp(e, op)
     else
         parsePFExpr(r)
     end
@@ -340,7 +345,8 @@ end
 # Binary operators tower
 const parseMultExpr = parseLeftRec(parseUniExpr, [Tokens.Punct(string(x)) for x in "*/%"])
 const parseAddExpr = parseLeftRec(parseMultExpr, [Tokens.Punct("+"), Tokens.Punct("-")])
-const parseRelExpr = parseLeftRec(parseAddExpr, map(Tokens.Punct, ["<", ">", "<=", ">="]))
+const parseShiftExpr = parseLeftRec(parseAddExpr, [Tokens.Punct("<<"), Tokens.Punct(">>")])
+const parseRelExpr = parseLeftRec(parseShiftExpr, map(Tokens.Punct, ["<", ">", "<=", ">="]))
 const parseEqExpr = parseLeftRec(parseRelExpr, [Tokens.Punct("=="), Tokens.Punct("!=")])
 const parseAndExpr = parseLeftRec(parseEqExpr, [Tokens.Punct("&")])
 const parseExOrExpr = parseLeftRec(parseAndExpr, [Tokens.Punct("^")])
