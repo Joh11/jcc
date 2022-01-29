@@ -61,13 +61,9 @@ function parseSpecifier(r)
     # TODO add struct union enum and typedef specifier
     if peekistype(r, Tokens.Kw)
         kw = peek(r)
-        if kw.str in ["typedef", "extern", "static", "auto", "register"]
-            return next(r) # storage class specifier
-        elseif kw.str in ["void", "char", "short", "int", "long", "float",
-                           "double", "signed", "unsigned", "_Bool", "_Complex"]
-            return next(r) # type specifier
-        elseif kw.str in ["const", "restrict", "volatile"]
-            return next(r) # type qualifier
+        if kw in Tokens.Kws.StorageClassSpecs return next(r)
+        elseif kw in Tokens.Kws.TypeSpecs return next(r)
+        elseif kw in Tokens.Kws.TypeQuals return next(r)
         end
     end
     error("unable to parse specifier")

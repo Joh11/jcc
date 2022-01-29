@@ -20,6 +20,17 @@ struct EOF end
 
 const Token = Union{Num, Id, Punct, Kw, EOF}
 
+module Kws
+using ..Tokens
+
+const StorageClassSpecs = map(Tokens.Kw, ["typedef", "extern", "static", "auto", "register"])
+const TypeSpecs = map(Tokens.Kw, ["void", "char", "short", "int", "long", "float",
+                             "double", "signed", "unsigned", "_Bool", "_Complex"])
+const TypeQuals = map(Tokens.Kw, ["const", "restrict", "volatile"])
+end
+
+using .Kws
+
 # see 6.4.6
 const punctfirst = "[](){}.-+&*~!/%<>=^|?:;,#"
 
