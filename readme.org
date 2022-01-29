@@ -35,3 +35,14 @@ following can be compiled correctly:
 
 Even though 95% of the grammar is parsed, important features such as
 type checking, and the preprocessor are currently lacking. Stay tuned :)
+
+* Running
+
+Requirements:
+- a x86 64 Linux machine
+- Julia
+
+Running tests:
+#+begin_src sh
+  julia -i test.jl
+#+end_src
