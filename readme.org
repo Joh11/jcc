@@ -1,121 +1,37 @@
 #+title: JCC: A C compiler written in Julia
 
-* Links
+* Goal
 
-- [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf][latest revision of the C99 standard]]
-- [[http://scheme2006.cs.uchicago.edu/11-ghuloum.pdf][An Incremental Approach to Compiler Construction (A. Ghuloum)]]
+Having a fully [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf][compliant]] C99 compiler, written completely in Julia.
 
-* Plan
+I am doing this to get more experience of Julia and assembly, and to
+perfect my knowledge of the inner workings of the C language. It is
+also useful to familiarize handling such a large scale project.
 
-Follow Ghuloum's paper closely. 
+My main inspiration is Ghuloum's renowned paper "[[http://scheme2006.cs.uchicago.edu/11-ghuloum.pdf][An Incremental
+Approach to Compiler Construction]]", showing a simple, step by step
+guide on how to build a Scheme compiler from scratch.
 
-* Julia specific
+* Current state
 
-- [[https://docs.julialang.org/en/v1/manual/workflow-tips/][REPL-based workflow]]
-- [[https://discourse.julialang.org/t/proper-way-of-organizing-code-into-subpackages/52835/5][Useful links for module usage]]
-- [[https://docs.julialang.org/en/v1/manual/modules/#Submodules-and-relative-paths][Modules - Julia documentation]]
-- for jump to definition: can simply use ~etags *.jl~
-- default equality test for structures compare fields using ~===~
-  (identity), not ~==~ (equality). Define it manually to i.e. compare
-  ASTs.
-- see =AST.BinaryOp= for an example of how to define mutually
-  recursive types
+To simplify debugging, and dealing with ELF and instruction encoding,
+the compiler outputs human-readable assembly in a text file. AT&T
+syntax is used, and a x86-64 architecture is implied. It can be
+assembled with =as= and =ld= ; an assembler will later be implemented.
 
-* Dump of things to implement
-- ternary (parse)
-- loops
-- my own assembler
-- my own linker
-- constant propagation / static optimizations (i.e. replace =40+2= by
-  =42=)
-- proper type checking
-
-* Notes
-
-** TODO Rudimentary type checking
-- idea:
-  - a function to build a type expression from a declaration
-  - a function to find the type of an expression, and if the
-    expression itself passes type check
-- for that I need to really understand how declarations work in C,
-  with all the subtleties of syntax.
-
-How to construct C types ? (every bold term is taken from the
-standard):
-- *basic types*: signed and unsigned integer types, floating types and
-  char
-
+For now, only basic arithmetic, and variable manipulation is
+implemented from parsing to assembly generation. A program like the
+following can be compiled correctly:
 #+begin_src c
-  int *a, b;
+  int main()
+  {
+      int a = 1;
+      int b;
+      if(a == 0) b = 1;
+      else { b = 41; }
+      return a + b;
+  }
 #+end_src
-- only a is a pointer right ? :: yes
 
-Now we need to have a big piece. The tree for the grammar of
-declaration is quite cumbersome to parse type from declarations;
-furthermore, we have some redundancy with the type names (that is
-basically a declaration without an identifier, with some more
-subtleties).
-
-- idea:
-  - the AST is actually perfect for declarations, no need to process
-    it, it's just that I did not understand it.
-  - perhaps the declaration specifiers could use some postprocessing,
-    mainly to avoid invalid types
-  - so for now I should focus on parsing the declarations correctly
-
-** DONE Try compiling a program with addition of literals
-
-How does the stack work ?
-- assume everything writes to =%eax=
-- if a binary op:
-  - compile first subexp
-  - save eax to the stack
-  - compile second subexp
-  - add the two, and save to =%eax=
-- for this I need a way to keep track of the stack size
-  - I can change io to context, and use a single global
-
-** DONE Unary primitives
-
-Will be simpler than binary ops.
-- is =-10= parsed as an unary op or a constant ? :: as an unary op
-
-** DONE Local variables
-- can variables be local to any compound statement in C99 ? :: yes I think
-- how to deal with nested environments ?
-  - use a stack (vector) of Dict{String, Int}
-    - int to store often on the stack
-    - pop this stack of envs, along with the stack counter when block
-      is over
-- first deal with assignment expressions
-
-** DONE Conditional expressions
-
-** TODO Stateful parsing
-
-I need a way to keep track in real time of which identifiers are used
-for typedefs.
-
-For now I can just forget about that, and do as if typedef did not
-exist. This allows for the =declaration-specifiers= to be purely
-keywords.
-   
-** Implementing assembly generation
-   
-- how is a function organized ?
-  - return type :: 
-  - declarator :: to simplify, =function_name(function_params)=
-  - compound statement for the body
-- =_start= will be the entry point, and will call =main=, to make it
-  like an ordinary function, able to use =ret= and so on
-
-** Notes about assembly
-   
-- use AT&T syntax, since it is what's used by Ghuloum and the GNU
-  Assembler
-
-Size suffixes:
-| suffix      | b    | s                    | w    | l                    | q    | t        |
-| meaning     | byte | short / single       | word | long                 | quad | ten      |
-|-------------+------+----------------------+------+----------------------+------+----------|
-| size (bits) | 8    | 16 (int), 32 (float) | 16   | 32 (int), 64 (float) | 64   | 80 float |
+Even though 95% of the grammar is parsed, important features such as
+type checking, and the preprocessor are currently lacking. Stay tuned :)

@@ -60,6 +60,7 @@ Base.:(==)(x::UnaryOp{ExprC}, y::UnaryOp{ExprC}) = x.e == y.e && x.op == y.op
 Base.:(==)(x::ParenExpr{ExprC}, y::ParenExpr{ExprC}) = x.e == y.e
 
 struct ParamDecl
+    # TODO change this
     type :: Tokens.Id
     id :: Tokens.Id
 end

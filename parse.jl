@@ -127,6 +127,12 @@ function parseParamList(r)
 end
 
 function parseDD(r)
+    dd = parseSimpleDD(r)
+    while peek(r) in [Tokens.Punct("("), Tokens.Punct("[")]
+        dd = parseDerivedDD(r, dd)
+    end
+    
+    # old
     if peek(r) == Tokens.Punct("(") # ( declarator )
         parseDDParen(r)
     elseif peek(r) isa Tokens.Id || peek(r) isa Tokens.Kw
@@ -148,6 +154,21 @@ function parseDD(r)
     else
         error("nyi dd, token $(peek(r))")
     end
+end
+
+function parseSimpleDD(r)
+    if peekistype(r, Tokens.Id) next(r) # identifier
+    else
+        consume(r, Tokens.Punct("("))
+        decl = parseDecltor(r)
+        consume(r, Tokens.Punct(")"))
+        
+        DDParen(decl)
+    end
+end
+
+function parseDerivedDD(r, dd)
+    
 end
 
 function parseDecltor(r)
