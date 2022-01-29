@@ -88,10 +88,12 @@ function Base.:(==)(a::DDParams{DirectDecltor}, b::DDParams{DirectDecltor})
 end
 
 struct Decltor
-    ptr :: Union{Nothing} # for now
+    # first vector is the ptrs
+    # second is the list of qualifiers for each ptr
+    ptr :: Vector{Vector{Tokens.Kw}}
     direct :: DirectDecltor
 end
-Decltor(direct::DirectDecltor) = Decltor(nothing, direct)
+Decltor(direct::DirectDecltor) = Decltor([], direct)
 
 struct DecltorWithInit
     decltor :: Decltor
@@ -105,6 +107,8 @@ struct Decl
     initds :: Vector{InitDecltor}
 end
 
+Base.:(==)(x::DecltorWithInit, y::DecltorWithInit) =
+    x.decltor == y.decltor && x.init == y.init
 Base.:(==)(x::Decltor, y::Decltor) = x.ptr == y.ptr && x.direct == y.direct
 Base.:(==)(x::Decl, y::Decl) = x.specs == y.specs && x.initds == y.initds
 

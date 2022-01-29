@@ -151,9 +151,23 @@ function parseDD(r)
 end
 
 function parseDecltor(r)
-    # TODO parse pointer things
+    ptr = []
+    while peek(r) == Tokens.Punct("*")
+        push!(ptr, parsePtr(r))
+    end
+    
     direct = parseDD(r)
-    AST.Decltor(direct)
+    AST.Decltor(ptr, direct)
+end
+
+function parsePtr(r)
+    consume(r, Tokens.Punct("*"))
+    quals = []
+    while peek(r) in Tokens.Kws.TypeQuals
+        push!(quals, next(r))
+    end
+
+    quals
 end
 
 function parseReturnStmt(r)

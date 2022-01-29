@@ -55,6 +55,14 @@ declaration is quite cumbersome to parse type from declarations;
 furthermore, we have some redundancy with the type names (that is
 basically a declaration without an identifier, with some more
 subtleties).
+
+- idea:
+  - the AST is actually perfect for declarations, no need to process
+    it, it's just that I did not understand it.
+  - perhaps the declaration specifiers could use some postprocessing,
+    mainly to avoid invalid types
+  - so for now I should focus on parsing the declarations correctly
+
 ** DONE Try compiling a program with addition of literals
 
 How does the stack work ?
